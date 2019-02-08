@@ -189,7 +189,7 @@ namespace Console_Schedule_Bot
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
 						// UserList[msg.Chat.Id].userInfo = msg.Text;  
-						UserList[msg.Chat.Id].Info = User.UserInfo.асп; //Запись данных
+						UserList[msg.Chat.Id].Info = User.UserInfo.graduate; //Запись данных
 						Answer = "Напиши номер курса и группы через точку. (x.x)";
 
 						WriteLine("Записал тип пользователя");
@@ -200,7 +200,7 @@ namespace Console_Schedule_Bot
 				case "бакалавр":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
-						UserList[msg.Chat.Id].Info = User.UserInfo.бак;  //Запись данных
+						UserList[msg.Chat.Id].Info = User.UserInfo.bachelor;  //Запись данных
 						Answer = "Напиши номер курса и группы через точку. (x.x)";
 
 						WriteLine("Записал тип пользователя");
@@ -212,7 +212,7 @@ namespace Console_Schedule_Bot
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
 
-						UserList[msg.Chat.Id].Info = User.UserInfo.маг;  //Запись данных
+						UserList[msg.Chat.Id].Info = User.UserInfo.master;  //Запись данных
 						Answer = "Напиши номер курса и группы через точку. (x.x)";
 
 						WriteLine("Записал тип пользователя");
@@ -223,7 +223,7 @@ namespace Console_Schedule_Bot
 				case "преподаватель":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
-						UserList[msg.Chat.Id].Info = User.UserInfo.препод;  //Запись данных
+						UserList[msg.Chat.Id].Info = User.UserInfo.teacher;  //Запись данных
 						Answer = "Напишите ваше ФИО.";
 
 						WriteLine("Записал тип пользователя");
@@ -232,7 +232,7 @@ namespace Console_Schedule_Bot
 					}
 					break;
 				default:
-					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.препод)
+					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
 					{
 						UserList[msg.Chat.Id].FIO = msg.Text;
 
