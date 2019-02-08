@@ -45,6 +45,12 @@ namespace Console_Schedule_Bot
 		//Что за колхоз в ПИ программы? TODO: Make local var at suitable place
 		static string serialized;
 
+        static ReplyKeyboardMarkup defaultKeyboard = new ReplyKeyboardMarkup(new[] {
+							new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава
+                            new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
+							}
+						);
+
 		//TODO: Вынести эту классную история в отдельный файл, где будет всё связанной с внутренней БД
 		class Json_Data
 		{
@@ -71,23 +77,6 @@ namespace Console_Schedule_Bot
 			Telegram.Bot.Types.Message msg = MessageEventArgs.Message;
 			if (msg == null || msg.Type != MessageType.Text)
 				return;
-
-
-			ReplyKeyboardMarkup registerKeyboard = new ReplyKeyboardMarkup(new[] {
-							new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава
-                            new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
-							}
-						);
-			/*
-            ReplyKeyboardMarkup registerKeyboard = new ReplyKeyboardMarkup(new[] {
-                            new[]{ new KeyboardButton("Знаешь меня?"),new KeyboardButton("Информация")},      //Кастомная клава
-                            new[]{ new KeyboardButton("Помощь"),new KeyboardButton("Забудь меня") }
-                            }
-                        );
-            */
-			bool NeedKeyboard = true;       //чтобы убирать клаву
-
-
 
 			String Answer = "";
 
@@ -137,7 +126,7 @@ namespace Console_Schedule_Bot
 			}
 
 			if (IsRegistered(msg.Chat.Id))
-				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registerKeyboard);
+				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: defaultKeyboard);
 			else
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
 		}
