@@ -54,8 +54,22 @@ namespace Console_Schedule_Bot
 							}
 						);
 
-		//TODO: Вынести эту классную история в отдельный файл, где будет всё связанной с внутренней БД
-		class Json_Data
+        static InlineKeyboardMarkup registrationKeyboard = new InlineKeyboardMarkup(
+                                                    new Telegram.Bot.Types.InlineKeyboardButton[][]
+                                                    {
+                                                            // First row
+                                                            new [] {
+                                                                new Telegram.Bot.Types.InlineKeyboardButton("раз","callback1"),
+                                                                new Telegram.Bot.Types.InlineKeyboardButton("два","callback2"),
+                                                            },
+                                                    }
+                                                );
+       
+        
+
+
+//TODO: Вынести эту классную история в отдельный файл, где будет всё связанной с внутренней БД
+class Json_Data
 		{
 			public User[] User { get; set; }
 		}
@@ -81,7 +95,7 @@ namespace Console_Schedule_Bot
 			if (msg == null || msg.Type != MessageType.Text)
 				return;
 
-			String Answer = "";
+            String Answer = "";
 
 			if (!IsRegistered(msg.Chat.Id))
 			{
@@ -130,9 +144,13 @@ namespace Console_Schedule_Bot
 
 			if (IsRegistered(msg.Chat.Id))
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: defaultKeyboard);
-			else
+            //else if (UserList[msg.Chat.Id].ident == 1)
+                 //await Bot.SendTextMessageAsync(message.Chat.Id, "Тест", false, false, 0, registrationKeyboard, Telegram.Bot.Types.Enums.ParseMode.Default);
+                //await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registrationKeyboard);
+            //else 
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
-		}
+
+        }
 
 		/// <summary>
 		/// Checks if entered course and group exist
@@ -163,7 +181,8 @@ namespace Console_Schedule_Bot
 			string Answer = "";
 			msg.Text = msg.Text.ToLower();
 
-			switch (msg.Text)
+
+            switch (msg.Text)
 			{
 				case "/start":
 					if (UserList[msg.Chat.Id].ident == 0)
@@ -172,8 +191,7 @@ namespace Console_Schedule_Bot
 
 						WriteLine("Записал ID: " + msg.Chat.Id.ToString());
 
-						Answer = "Вы бакалавр, магистр, аспирант или преподаватель?";
-
+                        Answer = "Вы бакалавр, магистр, аспирант или преподаватель?";
 						UserList[msg.Chat.Id].ident++;
 					}
 					break;
@@ -230,7 +248,7 @@ namespace Console_Schedule_Bot
 
 						WriteLine("Преподаватель зареган");
 
-						Answer = "Вы получили доступ к функцианалу.";
+						Answer = "Вы получили доступ к функционалу.";
 
 						//База расписания потом не найдёт препода из-за lower-case
 						UserList[msg.Chat.Id].ident++;
@@ -247,7 +265,7 @@ namespace Console_Schedule_Bot
 							//Info_label.Text = "Студент зареган";
 
 							UserList[msg.Chat.Id].ident++;
-							Answer = "Вы получили доступ к функцианалу.";
+							Answer = "Вы получили доступ к функционалу.";
 							WriteData();
 
 							WriteLine("Регистрация завершена!");
