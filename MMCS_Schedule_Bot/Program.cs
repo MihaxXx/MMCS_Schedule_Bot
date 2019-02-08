@@ -45,6 +45,9 @@ namespace Console_Schedule_Bot
 		//Что за колхоз в ПИ программы? TODO: Make local var at suitable place
 		static string serialized;
 
+        /// <summary>
+		/// Keyboard for registered users
+		/// </summary>
         static ReplyKeyboardMarkup defaultKeyboard = new ReplyKeyboardMarkup(new[] {
 							new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава
                             new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
