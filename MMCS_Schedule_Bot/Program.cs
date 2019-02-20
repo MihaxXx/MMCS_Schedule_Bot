@@ -54,22 +54,17 @@ namespace Console_Schedule_Bot
 							}
 						);
 
-        static InlineKeyboardMarkup registrationKeyboard = new InlineKeyboardMarkup(
-                                                    new Telegram.Bot.Types.InlineKeyboardButton[][]
-                                                    {
-                                                            // First row
-                                                            new [] {
-                                                                new Telegram.Bot.Types.InlineKeyboardButton("раз","callback1"),
-                                                                new Telegram.Bot.Types.InlineKeyboardButton("два","callback2"),
-                                                            },
-                                                    }
-                                                );
-       
-        
+        static ReplyKeyboardMarkup registrationKeyboard = new ReplyKeyboardMarkup(new[] {
+                            new[]{ new KeyboardButton("Бакалавр"),new KeyboardButton("Магистр") },      //Кастомная клава
+                            new[]{ new KeyboardButton("Аспирант"),new KeyboardButton("Преподаватель") }
+                            }
+                        );
 
 
-//TODO: Вынести эту классную история в отдельный файл, где будет всё связанной с внутренней БД
-class Json_Data
+
+
+        //TODO: Вынести эту классную история в отдельный файл, где будет всё связанной с внутренней БД
+        class Json_Data
 		{
 			public User[] User { get; set; }
 		}
@@ -144,10 +139,9 @@ class Json_Data
 
 			if (IsRegistered(msg.Chat.Id))
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: defaultKeyboard);
-            //else if (UserList[msg.Chat.Id].ident == 1)
-                 //await Bot.SendTextMessageAsync(message.Chat.Id, "Тест", false, false, 0, registrationKeyboard, Telegram.Bot.Types.Enums.ParseMode.Default);
-                //await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registrationKeyboard);
-            //else 
+            else if (UserList[msg.Chat.Id].ident == 1)
+                await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registrationKeyboard);
+            else 
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
 
         }
