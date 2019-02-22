@@ -40,10 +40,7 @@ namespace Console_Schedule_Bot
 		/// <summary>
 		/// User DB by Telegram IDs
 		/// </summary>
-		static Dictionary<long, User> UserList = new Dictionary<long, User>();
-
-		//Что за колхоз в ПИ программы? TODO: Make local var at suitable place
-		static string serialized;
+		static public Dictionary<long, User> UserList = new Dictionary<long, User>();
 
         /// <summary>
 		/// Keyboard for registered users
@@ -61,29 +58,20 @@ namespace Console_Schedule_Bot
                         );
 
 
-
-
-        //TODO: Вынести эту классную история в отдельный файл, где будет всё связанной с внутренней БД
-        class Json_Data
+        static void Main(string[] args)
 		{
-			public User[] User { get; set; }
-		}
-
-		static void Main(string[] args)
-		{
-			ReadData();
+            Json_Data.ReadData();
 
 			BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
 			WriteLine("Подключен бот");
 			BOT.OnMessage += BotOnMessageReceived;
 
 			BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
-			//BOT.StartReceiving();
 			WriteLine("Ожидает сообщений");
 			ReadLine();
 			BOT.StopReceiving();
 		}
-
+        
 		static async void BotOnMessageReceived(object sender, MessageEventArgs MessageEventArgs)
 		{
 			Telegram.Bot.Types.Message msg = MessageEventArgs.Message;
@@ -114,7 +102,8 @@ namespace Console_Schedule_Bot
 
 					case "/forget":
 					case "забудь меня":
-						UserList[msg.Chat.Id].ident = 0;
+                        UserList[msg.Chat.Id].ident = 0;
+                        Json_Data.WriteData();
 						Answer = "Я тебя забыл! Для повторной регистрации пиши /start";
 						break;
 
@@ -139,7 +128,7 @@ namespace Console_Schedule_Bot
 
 			if (IsRegistered(msg.Chat.Id))
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: defaultKeyboard);
-            else if (UserList[msg.Chat.Id].ident == 1)
+            else if (UserList[msg.Chat.Id].ident == 1 && UserList[msg.Chat.Id].Info!=User.UserInfo.teacher)
                 await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registrationKeyboard);
             else 
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
@@ -200,7 +189,9 @@ namespace Console_Schedule_Bot
 
 						UserList[msg.Chat.Id].ident++;
 					}
-					break;
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
 				case "бакалавр":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
@@ -211,7 +202,9 @@ namespace Console_Schedule_Bot
 
 						UserList[msg.Chat.Id].ident++;
 					}
-					break;
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
 				case "магистр":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
@@ -223,7 +216,9 @@ namespace Console_Schedule_Bot
 
 						UserList[msg.Chat.Id].ident++;
 					}
-					break;
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
 				case "преподаватель":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
@@ -234,7 +229,9 @@ namespace Console_Schedule_Bot
 
 						UserList[msg.Chat.Id].ident++;
 					}
-					break;
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
 				default:
 					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
 					{
@@ -247,7 +244,7 @@ namespace Console_Schedule_Bot
 						//База расписания потом не найдёт препода из-за lower-case
 						UserList[msg.Chat.Id].ident++;
 
-						WriteData();
+                        Json_Data.WriteData();
 					}
 					else
 					{
@@ -256,11 +253,10 @@ namespace Console_Schedule_Bot
 							UserList[msg.Chat.Id].course = int.Parse(msg.Text.Substring(0, 1));       //запись курса\группы
 							UserList[msg.Chat.Id].group = int.Parse(msg.Text.Substring(2));
 
-							//Info_label.Text = "Студент зареган";
 
 							UserList[msg.Chat.Id].ident++;
 							Answer = "Вы получили доступ к функционалу.";
-							WriteData();
+							Json_Data.WriteData();
 
 							WriteLine("Регистрация завершена!");
 						}
@@ -279,67 +275,14 @@ namespace Console_Schedule_Bot
 			return Answer;
 		}
 
-		static void WriteData()
-		{
-			Json_Data myCollection = new Json_Data();
-			myCollection.User = new User[UserList.Count];
+        
 
-			int i = 0;
-			foreach (KeyValuePair<long, User> us in UserList)
-			{
-				myCollection.User[i] = new User()
-				{
-					ident = us.Value.ident,
-					Info = us.Value.Info,
-					FIO = us.Value.FIO,
-					id = us.Value.id,
-					course = us.Value.course,
-					group = us.Value.group
-
-				};
-				i++;
-			}
-
-			serialized = JsonConvert.SerializeObject(myCollection);
-			if (serialized.Count() > 1)
-			{
-				if (!File.Exists("Json_Data"))
-					File.Create("Json_Data").Close();
-				File.WriteAllText("Json_Data", serialized, Encoding.UTF8);
-			}
-
-
-		}
-
-		static void ReadData()
-		{
-			if (File.Exists("Json_Data"))
-			{
-				serialized = File.ReadAllText("Json_Data", Encoding.UTF8);
-				dynamic json = JObject.Parse(serialized);
-
-				for (int i = 0; i < json.User.Count; i++)
-				{
-					User x = new User
-					{
-						ident = json.User[i].ident,
-						id = json.User[i].id,
-						FIO = json.User[i].FIO,
-						Info = json.User[i].Info,
-						course = json.User[i].course,
-						group = json.User[i].group
-					};
-					UserList.Add(x.id, x);
-				}
-			}
-
-		}
-		/// <summary>
-		/// Convert a tuple representing Lesson at time-slot and it's descr. to string for answer
-		/// </summary>
-		/// <param name="LC"></param>
-		/// <returns></returns>
-		static string LessonLstCurToAswr((Lesson, List<Curriculum>)LC)
+        /// <summary>
+        /// Convert a tuple representing Lesson at time-slot and it's descr. to string for answer
+        /// </summary>
+        /// <param name="LC"></param>
+        /// <returns></returns>
+        static string LessonLstCurToAswr((Lesson, List<Curriculum>)LC)
 		{
 			return LC.Item1.ToString() + "\n" + string.Join('\n', LC.Item2);
 		}
