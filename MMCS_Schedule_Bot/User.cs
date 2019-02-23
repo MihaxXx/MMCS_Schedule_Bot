@@ -39,6 +39,6 @@ namespace Console_Schedule_Bot
 		/// <summary>
 		/// Possible types of users
 		/// </summary>
-        public enum UserInfo { препод, бак, маг, асп };
+        public enum UserInfo { teacher, bachelor, master, graduate };
     }
 }

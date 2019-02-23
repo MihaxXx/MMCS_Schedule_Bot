@@ -50,7 +50,7 @@ namespace SchRequests
         public static string Request(string url)
         {
             // Выполняем запрос по адресу и получаем ответ в виде строки (Используем вебреквест!)
-            string response = new TimedWebClient { Timeout = 1000 }.DownloadString(url);
+            string response = new TimedWebClient { Timeout = 3000 }.DownloadString(url);
             // Исправляем кодировку
             //ChangeEncoding(ref response);
             // Возвращаем строку-ответ (формат JSON)

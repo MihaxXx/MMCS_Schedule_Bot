@@ -40,56 +40,45 @@ namespace Console_Schedule_Bot
 		/// <summary>
 		/// User DB by Telegram IDs
 		/// </summary>
-		static Dictionary<long, User> UserList = new Dictionary<long, User>();
+		static public Dictionary<long, User> UserList = new Dictionary<long, User>();
 
-		//Что за колхоз в ПИ программы? TODO: Make local var at suitable place
-		static string serialized;
+        /// <summary>
+		/// Keyboard for registered users
+		/// </summary>
+        static ReplyKeyboardMarkup defaultKeyboard = new ReplyKeyboardMarkup(new[] {
+							new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава
+                            new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
+							}
+						);
 
-		//TODO: Вынести эту классную история в отдельный файл, где будет всё связанной с внутренней БД
-		class Json_Data
+        static ReplyKeyboardMarkup registrationKeyboard = new ReplyKeyboardMarkup(new[] {
+                            new[]{ new KeyboardButton("Бакалавр"),new KeyboardButton("Магистр") },      //Кастомная клава
+                            new[]{ new KeyboardButton("Аспирант"),new KeyboardButton("Преподаватель") }
+                            }
+                        );
+
+
+        static void Main(string[] args)
 		{
-			public User[] User { get; set; }
-		}
-
-		static void Main(string[] args)
-		{
-			ReadData();
+            Json_Data.ReadData();
 
 			BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
 			WriteLine("Подключен бот");
 			BOT.OnMessage += BotOnMessageReceived;
 
 			BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
-			//BOT.StartReceiving();
 			WriteLine("Ожидает сообщений");
 			ReadLine();
 			BOT.StopReceiving();
 		}
-
+        
 		static async void BotOnMessageReceived(object sender, MessageEventArgs MessageEventArgs)
 		{
 			Telegram.Bot.Types.Message msg = MessageEventArgs.Message;
 			if (msg == null || msg.Type != MessageType.Text)
 				return;
 
-
-			ReplyKeyboardMarkup registerKeyboard = new ReplyKeyboardMarkup(new[] {
-							new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава
-                            new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
-							}
-						);
-			/*
-            ReplyKeyboardMarkup registerKeyboard = new ReplyKeyboardMarkup(new[] {
-                            new[]{ new KeyboardButton("Знаешь меня?"),new KeyboardButton("Информация")},      //Кастомная клава
-                            new[]{ new KeyboardButton("Помощь"),new KeyboardButton("Забудь меня") }
-                            }
-                        );
-            */
-			bool NeedKeyboard = true;       //чтобы убирать клаву
-
-
-
-			String Answer = "";
+            String Answer = "";
 
 			if (!IsRegistered(msg.Chat.Id))
 			{
@@ -113,7 +102,8 @@ namespace Console_Schedule_Bot
 
 					case "/forget":
 					case "забудь меня":
-						UserList[msg.Chat.Id].ident = 0;
+                        UserList[msg.Chat.Id].ident = 0;
+                        Json_Data.WriteData();
 						Answer = "Я тебя забыл! Для повторной регистрации пиши /start";
 						break;
 
@@ -137,10 +127,13 @@ namespace Console_Schedule_Bot
 			}
 
 			if (IsRegistered(msg.Chat.Id))
-				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registerKeyboard);
-			else
+				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: defaultKeyboard);
+            else if (UserList[msg.Chat.Id].ident == 1 && UserList[msg.Chat.Id].Info!=User.UserInfo.teacher)
+                await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registrationKeyboard);
+            else 
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
-		}
+
+        }
 
 		/// <summary>
 		/// Checks if entered course and group exist
@@ -171,7 +164,8 @@ namespace Console_Schedule_Bot
 			string Answer = "";
 			msg.Text = msg.Text.ToLower();
 
-			switch (msg.Text)
+
+            switch (msg.Text)
 			{
 				case "/start":
 					if (UserList[msg.Chat.Id].ident == 0)
@@ -180,8 +174,7 @@ namespace Console_Schedule_Bot
 
 						WriteLine("Записал ID: " + msg.Chat.Id.ToString());
 
-						Answer = "Вы бакалавр, магистр, аспирант или преподаватель?";
-
+                        Answer = "Вы бакалавр, магистр, аспирант или преподаватель?";
 						UserList[msg.Chat.Id].ident++;
 					}
 					break;
@@ -189,61 +182,69 @@ namespace Console_Schedule_Bot
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
 						// UserList[msg.Chat.Id].userInfo = msg.Text;  
-						UserList[msg.Chat.Id].Info = User.UserInfo.асп; //Запись данных
+						UserList[msg.Chat.Id].Info = User.UserInfo.graduate; //Запись данных
 						Answer = "Напиши номер курса и группы через точку. (x.x)";
 
 						WriteLine("Записал тип пользователя");
 
 						UserList[msg.Chat.Id].ident++;
 					}
-					break;
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
 				case "бакалавр":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
-						UserList[msg.Chat.Id].Info = User.UserInfo.бак;  //Запись данных
+						UserList[msg.Chat.Id].Info = User.UserInfo.bachelor;  //Запись данных
 						Answer = "Напиши номер курса и группы через точку. (x.x)";
 
 						WriteLine("Записал тип пользователя");
 
 						UserList[msg.Chat.Id].ident++;
 					}
-					break;
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
 				case "магистр":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
 
-						UserList[msg.Chat.Id].Info = User.UserInfo.маг;  //Запись данных
+						UserList[msg.Chat.Id].Info = User.UserInfo.master;  //Запись данных
 						Answer = "Напиши номер курса и группы через точку. (x.x)";
 
 						WriteLine("Записал тип пользователя");
 
 						UserList[msg.Chat.Id].ident++;
 					}
-					break;
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
 				case "преподаватель":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
-						UserList[msg.Chat.Id].Info = User.UserInfo.препод;  //Запись данных
+						UserList[msg.Chat.Id].Info = User.UserInfo.teacher;  //Запись данных
 						Answer = "Напишите ваше ФИО.";
 
 						WriteLine("Записал тип пользователя");
 
 						UserList[msg.Chat.Id].ident++;
 					}
-					break;
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
 				default:
-					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.препод)
+					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
 					{
 						UserList[msg.Chat.Id].FIO = msg.Text;
 
 						WriteLine("Преподаватель зареган");
 
-						Answer = "Вы получили доступ к функцианалу.";
+						Answer = "Вы получили доступ к функционалу.";
 
 						//База расписания потом не найдёт препода из-за lower-case
 						UserList[msg.Chat.Id].ident++;
 
-						WriteData();
+                        Json_Data.WriteData();
 					}
 					else
 					{
@@ -252,11 +253,10 @@ namespace Console_Schedule_Bot
 							UserList[msg.Chat.Id].course = int.Parse(msg.Text.Substring(0, 1));       //запись курса\группы
 							UserList[msg.Chat.Id].group = int.Parse(msg.Text.Substring(2));
 
-							//Info_label.Text = "Студент зареган";
 
 							UserList[msg.Chat.Id].ident++;
-							Answer = "Вы получили доступ к функцианалу.";
-							WriteData();
+							Answer = "Вы получили доступ к функционалу.";
+							Json_Data.WriteData();
 
 							WriteLine("Регистрация завершена!");
 						}
@@ -275,67 +275,14 @@ namespace Console_Schedule_Bot
 			return Answer;
 		}
 
-		static void WriteData()
-		{
-			Json_Data myCollection = new Json_Data();
-			myCollection.User = new User[UserList.Count];
+        
 
-			int i = 0;
-			foreach (KeyValuePair<long, User> us in UserList)
-			{
-				myCollection.User[i] = new User()
-				{
-					ident = us.Value.ident,
-					Info = us.Value.Info,
-					FIO = us.Value.FIO,
-					id = us.Value.id,
-					course = us.Value.course,
-					group = us.Value.group
-
-				};
-				i++;
-			}
-
-			serialized = JsonConvert.SerializeObject(myCollection);
-			if (serialized.Count() > 1)
-			{
-				if (!File.Exists("Json_Data"))
-					File.Create("Json_Data").Close();
-				File.WriteAllText("Json_Data", serialized, Encoding.UTF8);
-			}
-
-
-		}
-
-		static void ReadData()
-		{
-			if (File.Exists("Json_Data"))
-			{
-				serialized = File.ReadAllText("Json_Data", Encoding.UTF8);
-				dynamic json = JObject.Parse(serialized);
-
-				for (int i = 0; i < json.User.Count; i++)
-				{
-					User x = new User
-					{
-						ident = json.User[i].ident,
-						id = json.User[i].id,
-						FIO = json.User[i].FIO,
-						Info = json.User[i].Info,
-						course = json.User[i].course,
-						group = json.User[i].group
-					};
-					UserList.Add(x.id, x);
-				}
-			}
-
-		}
-		/// <summary>
-		/// Convert a tuple representing Lesson at time-slot and it's descr. to string for answer
-		/// </summary>
-		/// <param name="LC"></param>
-		/// <returns></returns>
-		static string LessonLstCurToAswr((Lesson, List<Curriculum>)LC)
+        /// <summary>
+        /// Convert a tuple representing Lesson at time-slot and it's descr. to string for answer
+        /// </summary>
+        /// <param name="LC"></param>
+        /// <returns></returns>
+        static string LessonLstCurToAswr((Lesson, List<Curriculum>)LC)
 		{
 			return LC.Item1.ToString() + "\n" + string.Join('\n', LC.Item2);
 		}
