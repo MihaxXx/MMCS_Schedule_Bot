@@ -19,7 +19,7 @@ namespace Console_Schedule_Bot
 		/// <summary>
 		/// Full name (in case user is a prof.
 		/// </summary>
-        public string FIO = "";
+        public int teacherId = 0;
 		/// <summary>
 		/// User's Telegram ID
 		/// </summary>

@@ -203,4 +203,44 @@ namespace API
 		// Список расписаний 
 		public Curriculum curricula { get; set; }
 	}
+
+    /// <summary>
+    /// Преподаватель (для списка преподов)
+    /// </summary>
+    [DataContract]
+    public class Teacher
+    {
+        [DataMember]
+        // Индентификатор
+        public int id { get; set; }
+
+        [DataMember]
+        // ФИО
+        public string name { get; set; }
+
+        [DataMember]
+        // Учёная степень
+        public string degree { get; set; }
+
+        /// Конструктор
+        Teacher(int id, string name, string degree)
+        {
+            this.id = id;
+            this.name = name;
+            this.degree = degree;
+        }
+
+        // Конструктор по умолчанию
+        Teacher() { }
+
+        public void Print()
+        {
+            Console.WriteLine($"{id}, {name}, {degree}");
+        }
+
+        public override string ToString()
+        {
+            return $"{id}, {name}, {degree}";
+        }
+    }
 }

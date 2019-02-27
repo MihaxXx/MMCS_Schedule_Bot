@@ -26,7 +26,7 @@ namespace Console_Schedule_Bot
                 {
                     ident = us.Value.ident,
                     Info = us.Value.Info,
-                    FIO = us.Value.FIO,
+                    teacherId = us.Value.teacherId,
                     id = us.Value.id,
                     course = us.Value.course,
                     group = us.Value.group
@@ -59,7 +59,7 @@ namespace Console_Schedule_Bot
                     {
                         ident = json.User[i].ident,
                         id = json.User[i].id,
-                        FIO = json.User[i].FIO,
+                        teacherId = json.User[i].teacherId,
                         Info = json.User[i].Info,
                         course = json.User[i].course,
                         group = json.User[i].group

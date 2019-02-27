@@ -153,6 +153,15 @@ namespace API
 			}
             return (new Lesson(),new List<Curriculum>());  
         }
-		
 	}
+
+    public static class TeacherMethods
+    {
+        public static Teacher[] GetTeachersList()
+        {
+            string url = $"http://schedule.sfedu.ru/APIv0/teacher/list";
+            string response = SchRequests.SchRequests.Request(url);
+            return SchRequests.SchRequests.DeSerializationFromStr<Teacher>(response);
+        }
+    }
 }

@@ -25,12 +25,17 @@ namespace Console_Schedule_Bot
 {
 	class Program
 	{
-		/// <summary>
-		/// Checks if user is already registered
-		/// </summary>
-		/// <param name="id">Telegram user ID</param>
-		/// <returns></returns>
-		static bool IsRegistered(long id) => UserList.ContainsKey(id) && UserList[id].ident > 2;
+        /// <summary>
+        /// List of teachers
+        /// </summary>
+        static public Dictionary<int, Teacher> TeacherList = new Dictionary<int, Teacher>();
+
+        /// <summary>
+        /// Checks if user is already registered
+        /// </summary>
+        /// <param name="id">Telegram user ID</param>
+        /// <returns></returns>
+        static bool IsRegistered(long id) => UserList.ContainsKey(id) && UserList[id].ident > 2;
 
 		/// <summary>
 		/// Bot instance to interact with Telegram
@@ -52,7 +57,7 @@ namespace Console_Schedule_Bot
 						);
 
         static ReplyKeyboardMarkup teacherKeyboard = new ReplyKeyboardMarkup(new[] {
-                            new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава для препода
+                            new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Знаешь меня?") },      //Кастомная клава для препода
                             new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
                             }
                         );
@@ -73,10 +78,23 @@ namespace Console_Schedule_Bot
             registrationKeyboard.OneTimeKeyboard = true;
         }
 
+        /// <summary>
+        /// Get list of techers
+        /// </summary>
+        static void TeachersInit()
+        {
+            var t = TeacherMethods.GetTeachersList();
+            foreach (Teacher x in t)
+                TeacherList.Add(x.id, x);
+            WriteLine("Список преподавателей получен");
+        }
+
         static void Main(string[] args)
 		{
             Json_Data.ReadData();
             KeyboardInit();
+            TeachersInit();
+
 
             BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
 			WriteLine("Подключен бот");
@@ -112,7 +130,10 @@ namespace Console_Schedule_Bot
 						break;
 					case "/knowme":
 					case "знаешь меня?":
-						Answer = "Да, ты " + UserList[msg.Chat.Id].id.ToString();
+                        if (UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
+                            Answer = "Да, вы " + TeacherList[UserList[msg.Chat.Id].teacherId].ToString();
+                        else
+						    Answer = "Да, ты " + UserList[msg.Chat.Id].id.ToString();
 						break;
 
 
@@ -164,11 +185,25 @@ namespace Console_Schedule_Bot
 			bool isGroup = int.TryParse(s.Remove(0, 2), out group);
 
 
-			if (isCourse && isGroup && s[1] == '.' && course <= 4)        //TODO: Проверка существования группы и курса
+			if (isCourse && isGroup && s[1] == '.' && course < 6 && group<12)        //TODO: Проверка существования группы и курса
 				return true;
 			else
 				return false;
 		}
+
+        /// <summary>
+        /// Returns Id of teacher or -1
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        static int ReturnTeachersId(string s)
+        {
+            s = s.ToLower();
+            foreach (var (n,t) in TeacherList)
+                if (t.name.ToLower() == s)
+                    return n;
+            return -1;
+        }
 
 		/// <summary>
 		/// Registration of new user in bot's DB
@@ -179,7 +214,6 @@ namespace Console_Schedule_Bot
 		{
 			string Answer = "";
 			msg.Text = msg.Text.ToLower();
-
 
             switch (msg.Text)
 			{
@@ -197,7 +231,6 @@ namespace Console_Schedule_Bot
 				case "аспирант":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
-						// UserList[msg.Chat.Id].userInfo = msg.Text;  
 						UserList[msg.Chat.Id].Info = User.UserInfo.graduate; //Запись данных
 						Answer = "Напиши номер курса и группы через точку. (x.x)";
 
@@ -251,16 +284,17 @@ namespace Console_Schedule_Bot
 				default:
 					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
 					{
-						UserList[msg.Chat.Id].FIO = msg.Text;
+                        int index = ReturnTeachersId(msg.Text);
+                        if (index != -1)
+                        {
+                            UserList[msg.Chat.Id].teacherId = index;
+                            WriteLine("Преподаватель зареган");
+                            Answer = "Вы получили доступ к функционалу.";
+                            UserList[msg.Chat.Id].ident++;
 
-						WriteLine("Преподаватель зареган");
-
-						Answer = "Вы получили доступ к функционалу.";
-
-						//База расписания потом не найдёт препода из-за lower-case
-						UserList[msg.Chat.Id].ident++;
-
-                        Json_Data.WriteData();
+                            Json_Data.WriteData();
+                        }
+                        else Answer = "Ошибка, преподаватель не найден! Попробуйте ещё раз.";
 					}
 					else
 					{
