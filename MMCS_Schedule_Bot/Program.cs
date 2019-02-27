@@ -45,24 +45,40 @@ namespace Console_Schedule_Bot
         /// <summary>
 		/// Keyboard for registered users
 		/// </summary>
-        static ReplyKeyboardMarkup defaultKeyboard = new ReplyKeyboardMarkup(new[] {
-							new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава
+        static ReplyKeyboardMarkup studentKeyboard = new ReplyKeyboardMarkup(new[] {
+							new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава для студентов
                             new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
 							}
 						);
 
-        static ReplyKeyboardMarkup registrationKeyboard = new ReplyKeyboardMarkup(new[] {
-                            new[]{ new KeyboardButton("Бакалавр"),new KeyboardButton("Магистр") },      //Кастомная клава
-                            new[]{ new KeyboardButton("Аспирант"),new KeyboardButton("Преподаватель") }
+        static ReplyKeyboardMarkup teacherKeyboard = new ReplyKeyboardMarkup(new[] {
+                            new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава для препода
+                            new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
                             }
                         );
 
+        static ReplyKeyboardMarkup registrationKeyboard = new ReplyKeyboardMarkup(new[] {
+                            new[]{ new KeyboardButton("Бакалавр"),new KeyboardButton("Магистр") },      //Кастомная клава для регистрации
+                            new[]{ new KeyboardButton("Аспирант"),new KeyboardButton("Преподаватель") }
+                            }
+                        );
+        /// <summary>
+        /// Some options for keyboards
+        /// </summary>
+        static void KeyboardInit()
+        {
+            studentKeyboard.ResizeKeyboard = true;
+            teacherKeyboard.ResizeKeyboard = true;
+            registrationKeyboard.ResizeKeyboard = true;
+            registrationKeyboard.OneTimeKeyboard = true;
+        }
 
         static void Main(string[] args)
 		{
             Json_Data.ReadData();
+            KeyboardInit();
 
-			BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
+            BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
 			WriteLine("Подключен бот");
 			BOT.OnMessage += BotOnMessageReceived;
 
@@ -127,8 +143,8 @@ namespace Console_Schedule_Bot
 			}
 
 			if (IsRegistered(msg.Chat.Id))
-				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: defaultKeyboard);
-            else if (UserList[msg.Chat.Id].ident == 1 && UserList[msg.Chat.Id].Info!=User.UserInfo.teacher)
+				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: UserList[msg.Chat.Id].Info==User.UserInfo.teacher ? teacherKeyboard : studentKeyboard);
+            else if (UserList[msg.Chat.Id].ident == 1)
                 await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registrationKeyboard);
             else 
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
