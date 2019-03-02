@@ -28,14 +28,6 @@ namespace Console_Schedule_Bot
 		/// User's Telegram ID
 		/// </summary>
         public long id = 0;
-		/// <summary>
-		/// User's course
-		/// </summary>
-        public int course = 0;
-		/// <summary>
-		/// User's group
-		/// </summary>
-        public int group = 0;
 
 		/// <summary>
 		/// Possible types of users

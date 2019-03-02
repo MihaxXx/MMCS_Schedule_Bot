@@ -28,8 +28,6 @@ namespace Console_Schedule_Bot
                     Info = us.Value.Info,
                     teacherId = us.Value.teacherId,
                     id = us.Value.id,
-                    course = us.Value.course,
-                    group = us.Value.group,
                     groupid = us.Value.groupid
 
                 };
@@ -62,8 +60,6 @@ namespace Console_Schedule_Bot
                         id = json.User[i].id,
                         teacherId = json.User[i].teacherId,
                         Info = json.User[i].Info,
-                        course = json.User[i].course,
-                        group = json.User[i].group,
                         groupid = json.User[i].groupid
                     };
                     Program.UserList.Add(x.id, x);

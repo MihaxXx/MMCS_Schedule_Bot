@@ -143,7 +143,7 @@ namespace Console_Schedule_Bot
 				{
 					case "ближайшая пара":
 					case "/next":
-						Answer = LessonLstCurToAswr(CurrentSubject.GetCurrentLesson(CurrentSubject.CourseGroupToID(UserList[msg.Chat.Id].course, UserList[msg.Chat.Id].group)));
+						Answer = LessonLstCurToAswr(CurrentSubject.GetCurrentLesson(UserList[msg.Chat.Id].groupid));
 						break;
 					case "/knowme":
 					case "знаешь меня?":
@@ -334,10 +334,6 @@ namespace Console_Schedule_Bot
 					{
 						if (UserList[msg.Chat.Id].ident == 2 && IsCourseGroup(msg.Chat.Id,msg.Text))               //проверка введённого номера курса\группы
 						{
-							UserList[msg.Chat.Id].course = int.Parse(msg.Text.Substring(0, 1));       //запись курса\группы
-							UserList[msg.Chat.Id].group = int.Parse(msg.Text.Substring(2));
-
-
 							UserList[msg.Chat.Id].ident++;
 							Answer = "Вы получили доступ к функционалу.";
 							Json_Data.WriteData();
