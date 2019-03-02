@@ -146,6 +146,7 @@ namespace API
 			Console.WriteLine($"id: {id}, имя: {name}, номер: {num}, gradeid: {gradeid}");
 		}
 	}
+
 	/// <summary>
 	/// Неделя
 	/// </summary>
@@ -241,6 +242,48 @@ namespace API
         public override string ToString()
         {
             return $"{id}, {name}, {degree}";
+        }
+    }
+
+
+    [DataContract]
+    public class Grade
+    {
+        [DataMember]
+        // Индентификатор
+        public int id { get; set; }
+
+        [DataMember]
+        // ФИО
+        public int num { get; set; }
+
+        [DataMember]
+        // Учёная степень
+        public string degree { get; set; }
+
+        [DataMember]
+        // Список групп
+        public Group[] Groups { get; set; }
+
+        // Конструктор
+        Grade(int id, int num, string degree)
+        {
+            this.id = id;
+            this.num = num;
+            this.degree = degree;
+        }
+
+        // Конструктор по умолчанию
+        Grade() { }
+
+        public void Print()
+        {
+            Console.WriteLine($"{id}, {num}, {degree}");
+        }
+
+        public override string ToString()
+        {
+            return $"{id}, {num}, {degree}";
         }
     }
 }
