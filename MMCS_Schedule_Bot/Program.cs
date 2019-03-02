@@ -99,8 +99,6 @@ namespace Console_Schedule_Bot
             for (int i = 0; i < GradeList.Length; i++)
             {
                 GradeList[i].Groups = GradeMethods.GetGradesList(GradeList[i].id);
-                foreach (var x in GradeList[i].Groups)
-                    x.Print();
             }
             WriteLine("Список курсов получен.");
         }
