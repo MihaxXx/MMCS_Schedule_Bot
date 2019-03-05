@@ -4,6 +4,18 @@ using System.Runtime.Serialization;
 
 namespace API
 {
+    [DataContract]
+    public class Schedule
+    {
+        [DataMember]
+        // Список предметов
+        public List<Lesson> lessons { get; set; }
+
+        [DataMember]
+        // Список расписаний 
+        public List<Curriculum> curricula { get; set; }
+    }
+
 	/// <summary>
 	/// Занятие
 	/// </summary>
@@ -101,16 +113,8 @@ namespace API
 	/// Расписание группы
 	/// </summary>
 	[DataContract] 
-    public class SchOfGroup
+    public class SchOfGroup: Schedule
     {
-        [DataMember] 
-        // Список предметов
-        public List<Lesson> lessons { get; set; } 
-
-        [DataMember] 
-        // Список расписаний 
-        public List<Curriculum> curricula { get; set; }
-
         public void Print()
         {
             foreach (Lesson lesson in lessons)
@@ -119,10 +123,64 @@ namespace API
                 cur.Print();
         }
     }
-	/// <summary>
-	/// Группа
-	/// </summary>
-	[DataContract]
+
+    [DataContract]
+    /// <summary>
+    /// Класс группы 
+    /// </summary>
+    public class Groups
+    {
+        [DataMember]
+        public int uberid { get; set; }
+
+        [DataMember]
+        public int groupnum { get; set; }
+
+        [DataMember]
+        public int gradenum { get; set; }
+
+        [DataMember]
+        public string degree { get; set; }
+
+        [DataMember]
+        public string name { get; set; }
+
+        public void Print()
+        {
+            Console.WriteLine($"{uberid}, {groupnum}, {gradenum}, {degree}, {name}");
+        }
+
+        public override string ToString()
+        {
+            return $"{uberid}, {groupnum}, {gradenum}, {degree}, {name}";
+        }
+    }
+
+    /// <summary>
+    /// Расписание преподавателя
+    /// </summary>
+    [DataContract]
+    public class SchOfTeacher: Schedule
+    {
+        [DataMember]
+        // Список групп
+        public List<Groups> groups { get; set; }
+
+        public void Print()
+        {
+            foreach (Lesson lesson in lessons)
+                lesson.Print();
+            foreach (Curriculum cur in curricula)
+                cur.Print();
+            foreach (Groups group in groups)
+                group.Print(); 
+        }
+    }
+
+    /// <summary>
+    /// Группа
+    /// </summary>
+    [DataContract]
 	public class Group
 	{
 		[DataMember]
