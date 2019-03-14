@@ -254,14 +254,13 @@ namespace API
         public int id { get; set; }
 
         [DataMember]
-        // ФИО
+        // Номер
         public int num { get; set; }
 
         [DataMember]
-        // Учёная степень
+        // Звание студента
         public string degree { get; set; }
 
-        [DataMember]
         // Список групп
         public Group[] Groups { get; set; }
 
@@ -283,7 +282,7 @@ namespace API
 
         public override string ToString()
         {
-            return $"{id}, {num}, {degree}";
+            return $"{id}, {degree}";
         }
     }
 }

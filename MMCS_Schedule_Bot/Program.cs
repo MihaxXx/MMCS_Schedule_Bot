@@ -98,7 +98,7 @@ namespace Console_Schedule_Bot
             GradeList = GradeMethods.GetGradesList();
             for (int i = 0; i < GradeList.Length; i++)
             {
-                GradeList[i].Groups = GradeMethods.GetGradesList(GradeList[i].id);
+                GradeList[i].Groups = GradeMethods.GetGroupsList(GradeList[i].id);
             }
             WriteLine("Список курсов получен.");
         }
@@ -141,7 +141,10 @@ namespace Console_Schedule_Bot
 				{
 					case "ближайшая пара":
 					case "/next":
-						Answer = LessonLstCurToAswr(CurrentSubject.GetCurrentLesson(UserList[msg.Chat.Id].groupid));
+                        if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
+                            Answer = LessonLstCurToAswr(CurrentSubject.GetCurrentLesson(UserList[msg.Chat.Id].groupid));
+                        else
+                            Answer = "Эта команда работает пока только для студентов(";  //TODO Ближайшая пара препода
 						break;
 					case "/knowme":
 					case "знаешь меня?":
@@ -196,10 +199,20 @@ namespace Console_Schedule_Bot
 		{
             try
             {
-                if (s[1] != '.')
+                var lst = s.Split('.').ToArray();
+                if (lst[0] == String.Empty || lst[1] == String.Empty || lst.Length>2 || lst.Length<1)
+                {
+                    WriteLine("Ошибка ввода!");
                     return false;
-                int course = int.Parse(s[0].ToString());
-                int group = int.Parse(s.Remove(0, 2));
+                }
+                var (course, group) = (-1, -1);
+                bool IsCourse = int.TryParse(lst[0],out course);
+                bool IsGroup = int.TryParse(lst[1],out group);
+                if (!IsCourse || !IsGroup)
+                {
+                    WriteLine("Ошибка парсинга!");
+                    return false;
+                }
                 int groupid = 0;
                 switch (UserList[id].Info)
                 {
@@ -228,14 +241,7 @@ namespace Console_Schedule_Bot
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        static int ReturnTeachersId(string s)
-        {
-            s = s.ToLower();
-            foreach (var (n,t) in TeacherList)
-                if (t.name.ToLower() == s)
-                    return n;
-            return -1;
-        }
+        static int ReturnTeachersId(string s) => TeacherList.FirstOrDefault(t => t.Value.name.ToLower() == s.ToLower()).Key;
 
 		/// <summary>
 		/// Registration of new user in bot's DB

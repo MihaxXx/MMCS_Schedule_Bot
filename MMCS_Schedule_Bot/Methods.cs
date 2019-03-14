@@ -173,7 +173,7 @@ namespace API
             return SchRequests.SchRequests.DeSerializationFromStr<Grade>(response);
         }
 
-        public static Group[] GetGradesList(int GradeId)
+        public static Group[] GetGroupsList(int GradeId)
         {
             string url = $"http://schedule.sfedu.ru/APIv0/group/list/" + GradeId;
             string response = SchRequests.SchRequests.Request(url);
