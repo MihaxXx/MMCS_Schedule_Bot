@@ -109,7 +109,6 @@ namespace API
 			Week week = SchRequests.SchRequests.DeSerializationObjFromStr<Week>(response);
             return week; 
         }
-
 		/// <summary>
 		/// Gets Schedule GroupID by <paramref name="course"/> and <paramref name="group"/>
 		/// </summary>
@@ -153,6 +152,33 @@ namespace API
 			}
             return (new Lesson(),new List<Curriculum>());  
         }
-		
 	}
+
+    public static class TeacherMethods
+    {
+        public static Teacher[] GetTeachersList()
+        {
+            string url = $"http://schedule.sfedu.ru/APIv0/teacher/list";
+            string response = SchRequests.SchRequests.Request(url);
+            return SchRequests.SchRequests.DeSerializationFromStr<Teacher>(response);
+        }
+    }
+
+    public static class GradeMethods
+    {
+        public static Grade[] GetGradesList()
+        {
+            string url = $"http://schedule.sfedu.ru/APIv1/grade/list";
+            string response = SchRequests.SchRequests.Request(url);
+            return SchRequests.SchRequests.DeSerializationFromStr<Grade>(response);
+        }
+
+        public static Group[] GetGroupsList(int GradeId)
+        {
+            string url = $"http://schedule.sfedu.ru/APIv0/group/list/" + GradeId;
+            string response = SchRequests.SchRequests.Request(url);
+            return SchRequests.SchRequests.DeSerializationFromStr<Group>(response);
+        }
+    }
+
 }

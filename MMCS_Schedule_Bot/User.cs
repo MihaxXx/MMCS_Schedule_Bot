@@ -17,25 +17,18 @@ namespace Console_Schedule_Bot
 		/// </summary>
         public UserInfo Info;
 		/// <summary>
-		/// Full name (in case user is a prof.
+		/// Id of teacher
 		/// </summary>
-        public string FIO = "";
+        public int teacherId = 0;
+        /// <summary>
+        /// Id of user`s group
+        /// </summary>
+        public int groupid = 0;
 		/// <summary>
 		/// User's Telegram ID
 		/// </summary>
         public long id = 0;
-		/// <summary>
-		/// User's course
-		/// </summary>
-        public int course = 0;
-		/// <summary>
-		/// User's group
-		/// </summary>
-        public int group = 0;
 
-        //public enum Prepods  {ФИО};
-
-		//TODO: Change to latin abbr.
 		/// <summary>
 		/// Possible types of users
 		/// </summary>

@@ -10,10 +10,6 @@ using System.Net.Http;
 using System.IO;
 using System.Threading;
 using static System.Console;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Args;
@@ -25,12 +21,22 @@ namespace Console_Schedule_Bot
 {
 	class Program
 	{
-		/// <summary>
-		/// Checks if user is already registered
-		/// </summary>
-		/// <param name="id">Telegram user ID</param>
-		/// <returns></returns>
-		static bool IsRegistered(long id) => UserList.ContainsKey(id) && UserList[id].ident > 2;
+        /// <summary>
+        /// List of teachers
+        /// </summary>
+        static public Dictionary<int, Teacher> TeacherList = new Dictionary<int, Teacher>();
+
+        /// <summary>
+        /// List of grades
+        /// </summary>
+        static public Grade[] GradeList;
+
+        /// <summary>
+        /// Checks if user is already registered
+        /// </summary>
+        /// <param name="id">Telegram user ID</param>
+        /// <returns></returns>
+        static bool IsRegistered(long id) => UserList.ContainsKey(id) && UserList[id].ident > 2;
 
 		/// <summary>
 		/// Bot instance to interact with Telegram
@@ -45,24 +51,67 @@ namespace Console_Schedule_Bot
         /// <summary>
 		/// Keyboard for registered users
 		/// </summary>
-        static ReplyKeyboardMarkup defaultKeyboard = new ReplyKeyboardMarkup(new[] {
-							new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава
+        static ReplyKeyboardMarkup studentKeyboard = new ReplyKeyboardMarkup(new[] {
+							new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Расписание на сегодня") },      //Кастомная клава для студентов
                             new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
 							}
 						);
 
-        static ReplyKeyboardMarkup registrationKeyboard = new ReplyKeyboardMarkup(new[] {
-                            new[]{ new KeyboardButton("Бакалавр"),new KeyboardButton("Магистр") },      //Кастомная клава
-                            new[]{ new KeyboardButton("Аспирант"),new KeyboardButton("Преподаватель") }
+        static ReplyKeyboardMarkup teacherKeyboard = new ReplyKeyboardMarkup(new[] {
+                            new[]{ new KeyboardButton("Ближайшая пара"),new KeyboardButton("Знаешь меня?") },      //Кастомная клава для препода
+                            new[]{ new KeyboardButton("Расписание на неделю"),new KeyboardButton("Помощь") }
                             }
                         );
 
+        static ReplyKeyboardMarkup registrationKeyboard = new ReplyKeyboardMarkup(new[] {
+                            new[]{ new KeyboardButton("Бакалавр"),new KeyboardButton("Магистр") },      //Кастомная клава для регистрации
+                            new[]{ new KeyboardButton("Аспирант"),new KeyboardButton("Преподаватель") }
+                            }
+                        );
+        /// <summary>
+        /// Some options for keyboards
+        /// </summary>
+        static void KeyboardInit()
+        {
+            studentKeyboard.ResizeKeyboard = true;
+            teacherKeyboard.ResizeKeyboard = true;
+            registrationKeyboard.ResizeKeyboard = true;
+            registrationKeyboard.OneTimeKeyboard = true;
+        }
+
+        /// <summary>
+        /// Gets list of techers
+        /// </summary>
+        static void TeachersInit()
+        {
+            var t = TeacherMethods.GetTeachersList();
+            foreach (Teacher x in t)
+                TeacherList.Add(x.id, x);
+            WriteLine("Список преподавателей получен.");
+        }
+
+        /// <summary>
+        /// Gets list of grades
+        /// </summary>
+        static void GradeInit()
+        {
+            GradeList = GradeMethods.GetGradesList();
+            for (int i = 0; i < GradeList.Length; i++)
+            {
+                GradeList[i].Groups = GradeMethods.GetGroupsList(GradeList[i].id);
+            }
+            WriteLine("Список курсов получен.");
+        }
+        
 
         static void Main(string[] args)
 		{
             Json_Data.ReadData();
+            KeyboardInit();
+            TeachersInit();
+            GradeInit();
 
-			BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
+            BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
 			WriteLine("Подключен бот");
 			BOT.OnMessage += BotOnMessageReceived;
 
@@ -92,11 +141,17 @@ namespace Console_Schedule_Bot
 				{
 					case "ближайшая пара":
 					case "/next":
-						Answer = LessonLstCurToAswr(CurrentSubject.GetCurrentLesson(CurrentSubject.CourseGroupToID(UserList[msg.Chat.Id].course, UserList[msg.Chat.Id].group)));
+                        if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
+                            Answer = LessonLstCurToAswr(CurrentSubject.GetCurrentLesson(UserList[msg.Chat.Id].groupid));
+                        else
+                            Answer = "Эта команда работает пока только для студентов(";  //TODO Ближайшая пара препода
 						break;
 					case "/knowme":
 					case "знаешь меня?":
-						Answer = "Да, ты " + UserList[msg.Chat.Id].id.ToString();
+                        if (UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
+                            Answer = "Да, вы " + TeacherList[UserList[msg.Chat.Id].teacherId].ToString();
+                        else
+						    Answer = "Да, ты " + UserList[msg.Chat.Id].id.ToString();
 						break;
 
 
@@ -127,8 +182,8 @@ namespace Console_Schedule_Bot
 			}
 
 			if (IsRegistered(msg.Chat.Id))
-				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: defaultKeyboard);
-            else if (UserList[msg.Chat.Id].ident == 1 && UserList[msg.Chat.Id].Info!=User.UserInfo.teacher)
+				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: UserList[msg.Chat.Id].Info==User.UserInfo.teacher ? teacherKeyboard : studentKeyboard);
+            else if (UserList[msg.Chat.Id].ident == 1)
                 await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registrationKeyboard);
             else 
 				await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
@@ -140,19 +195,53 @@ namespace Console_Schedule_Bot
 		/// </summary>
 		/// <param name="s">C.G</param>
 		/// <returns></returns>
-		static bool IsCourseGroup(string s)
+		static bool IsCourseGroup(long id,string s)
 		{
-			int course;
-			bool isCourse = int.TryParse(s[0].ToString(), out course);
-			int group;
-			bool isGroup = int.TryParse(s.Remove(0, 2), out group);
-
-
-			if (isCourse && isGroup && s[1] == '.' && course <= 4)        //TODO: Проверка существования группы и курса
-				return true;
-			else
-				return false;
+            try
+            {
+                var lst = s.Split('.').ToArray();
+                if (lst[0] == String.Empty || lst[1] == String.Empty || lst.Length>2 || lst.Length<1)
+                {
+                    WriteLine("Ошибка ввода!");
+                    return false;
+                }
+                var (course, group) = (-1, -1);
+                bool IsCourse = int.TryParse(lst[0],out course);
+                bool IsGroup = int.TryParse(lst[1],out group);
+                if (!IsCourse || !IsGroup)
+                {
+                    WriteLine("Ошибка парсинга!");
+                    return false;
+                }
+                int groupid = 0;
+                switch (UserList[id].Info)
+                {
+                    case User.UserInfo.bachelor:
+                        groupid = GradeList.Where(y => y.degree == "bachelor" && y.num == course).First().Groups.Where(y => y.num == group).First().id;
+                        break;
+                    case User.UserInfo.graduate:
+                        groupid = GradeList.Where(y => y.degree == "postgraduate" && y.num == course).First().Groups.Where(y => y.num == group).First().id;
+                        break;
+                    case User.UserInfo.master:
+                        groupid = GradeList.Where(y => y.degree == "master" && y.num == course).First().Groups.Where(y => y.num == group).First().id;
+                        break;
+                }
+                UserList[id].groupid = groupid;
+                return true;
+            }
+            catch (Exception e)
+            {
+                WriteLine("Ошибка: "+e.Message);
+                return false;
+            }
 		}
+
+        /// <summary>
+        /// Returns Id of teacher or -1
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        static int ReturnTeachersId(string s) => TeacherList.FirstOrDefault(t => t.Value.name.ToLower() == s.ToLower()).Key;
 
 		/// <summary>
 		/// Registration of new user in bot's DB
@@ -163,7 +252,6 @@ namespace Console_Schedule_Bot
 		{
 			string Answer = "";
 			msg.Text = msg.Text.ToLower();
-
 
             switch (msg.Text)
 			{
@@ -181,7 +269,6 @@ namespace Console_Schedule_Bot
 				case "аспирант":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
-						// UserList[msg.Chat.Id].userInfo = msg.Text;  
 						UserList[msg.Chat.Id].Info = User.UserInfo.graduate; //Запись данных
 						Answer = "Напиши номер курса и группы через точку. (x.x)";
 
@@ -235,25 +322,22 @@ namespace Console_Schedule_Bot
 				default:
 					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
 					{
-						UserList[msg.Chat.Id].FIO = msg.Text;
+                        int index = ReturnTeachersId(msg.Text);
+                        if (index != -1)
+                        {
+                            UserList[msg.Chat.Id].teacherId = index;
+                            WriteLine("Преподаватель зареган");
+                            Answer = "Вы получили доступ к функционалу.";
+                            UserList[msg.Chat.Id].ident++;
 
-						WriteLine("Преподаватель зареган");
-
-						Answer = "Вы получили доступ к функционалу.";
-
-						//База расписания потом не найдёт препода из-за lower-case
-						UserList[msg.Chat.Id].ident++;
-
-                        Json_Data.WriteData();
+                            Json_Data.WriteData();
+                        }
+                        else Answer = "Ошибка, преподаватель не найден! Попробуйте ещё раз.";
 					}
 					else
 					{
-						if (UserList[msg.Chat.Id].ident == 2 && IsCourseGroup(msg.Text))               //проверка введённого номера курса\группы
+						if (UserList[msg.Chat.Id].ident == 2 && IsCourseGroup(msg.Chat.Id,msg.Text))               //проверка введённого номера курса\группы
 						{
-							UserList[msg.Chat.Id].course = int.Parse(msg.Text.Substring(0, 1));       //запись курса\группы
-							UserList[msg.Chat.Id].group = int.Parse(msg.Text.Substring(2));
-
-
 							UserList[msg.Chat.Id].ident++;
 							Answer = "Вы получили доступ к функционалу.";
 							Json_Data.WriteData();
