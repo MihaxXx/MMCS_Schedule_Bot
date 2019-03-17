@@ -3,7 +3,6 @@ using System.Runtime.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 using SchRequests; 
-using static System.DateTime;
 using Console_Schedule_Bot; 
 
 /// <summary>
@@ -158,25 +157,26 @@ namespace API
         }
 	}
 
-    enum DayOfWeek { Monday = 0, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday };
-
     /// <summary>
-    /// Дата
+    /// Возвращает расписание пользователя User
     /// </summary>
-    public class Date
+    public static SchOfGroup GetSchedule(User user)
     {
-        int year;
-        int month;
-        int day;
-
-        public static int GetDayOfWeek()
+        string url = "";
+        SchOfGroup schedule = new SchOfGroup(); 
+        if (user.Info == User.UserInfo.bachelor)
         {
-            return (int)System.DateTime.Now.DayOfWeek; 
+            url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + user.group;
+            string response = SchRequests.SchRequests.Request(url);
+            schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfGroup>(response);
         }
-        public static Week GetWeek()
+        if (user.Info == User.UserInfo.teacher)
         {
-            return CurrentSubject.GetCurrentWeek(); 
+            url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + user.id; // ?
+            string response = SchRequests.SchRequests.Request(url);
+            schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfTeacher>(response);
         }
+        return schedule; 
     }
 
     /// <summary>
@@ -184,64 +184,35 @@ namespace API
     /// </summary>
     public class DaySchedule
     {
-        User user; 
-        Week week;
-        Date date;
-        List<Lesson> lessons;
-
-        /// <summary>
-        /// Конструктор класса расписания на день
-        /// </summary>
-        /// <param name="user">Пользователь</param>
-        /// <param name="week">Тип недели</param>
-        /// <param name="date">Дата</param>
-        /// <param name="lessons">Список пар</param>
-        public DaySchedule(User user, Week week, Date date, List<Lesson> lessons)
-        {
-            this.user = user; 
-            this.week = week;
-            this.date = date;
-            this.lessons = lessons;
-        }
-
         /// <summary>
         /// Получает расписание на день для пользователя User и номера дня недели dayofweek
         /// </summary>
         /// <param name="user"></param>
         /// <param name="dayofweek"></param>
         /// <returns></returns>
-        public static DaySchedule GetDaySchedule(User user, int dayofweek)
+        public static List<LessonInfo> GetDaySchedule(SchOfGroup schedule, int dayofweek, Week week)
         {
-            string url = "";
-            if (user.Info == User.UserInfo.bachelor)
-            {
-                url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + user.group;
-            }
-            if (user.Info == User.UserInfo.teacher)
-            {
-                url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + user.id; // ?
-            }
-            string response = SchRequests.SchRequests.Request(url);
-            SchOfGroup schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfGroup>(response);
-            Week week = Date.GetWeek();
-            List<Lesson> les = schedule.lessons.Where(l => (TimeOfLesson.Parse(l.timeslot).day ==
+            List<LessonInfo> les = new List<LessonInfo>(); 
+            foreach (var l in schedule.lessons) 
+                if ((TimeOfLesson.Parse(l.timeslot).day ==
             dayofweek) && ((TimeOfLesson.Parse(l.timeslot).week == week.type) ||
-            (TimeOfLesson.Parse(l.timeslot).week == -1))).ToList();
-            return new DaySchedule(user, week, new Date(), les);
+            (TimeOfLesson.Parse(l.timeslot).week == -1))) 
+                    les.Add(new LessonInfo(l, schedule.curricula.Where(c => c.lessonid == l.id))); 
+            return les;
         }
 
         /// <summary>
         /// Создаёт массив строк, в которых записано расписание на день (первая строчка - заголовок)
         /// </summary>
         /// <returns></returns>
-        public string[] ToText()
+        public string[] ToText(this List<LessonInfo> l) 
         {
-            string[] str = new string[lessons.Count + 1];
-            str[0] = $"Расписание на день для '{user.FIO}'";
+            string[] str = new string[l.lessons.Count + 1];
+            str[0] = $"Расписание на день для '{user.id}'";
             int i = 1;
-            foreach (var les in lessons)
+            foreach (var c in l.curricula)
             {
-                str[i] = $"Занятие №{i}: {CurrentSubject.GetLessonInfo(les.id.ToString()).lesson.ToString()} \n {CurrentSubject.GetLessonInfo(les.id.ToString()).curricula.ToString()}";
+                str[i] = $"#{i}: {c}";
                 i++;
             }
             return str; 
@@ -253,55 +224,33 @@ namespace API
     /// </summary>
     public class WeekSchedule
     {
-        User user; 
-        List<DaySchedule> weekschedule;
-        Week week;
-
         /// <summary>
-        /// Конструктор класса расписания на неделю
-        /// </summary>
-        /// <param name="user">Пользователь</param>
-        /// <param name="weekschedule">Список пар</param>
-        /// <param name="week">Тип недели</param>
-        public WeekSchedule(User user, List<DaySchedule> weekschedule, Week week)
-        {
-            this.user = user; 
-            this.weekschedule = weekschedule;
-            this.week = week;
-        }
-
-        /// <summary>
-        /// Получает расписание на неделю для пользователя User
+        /// Получает расписание на неделю для пользователя по введённому полному расписанию
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public static WeekSchedule GetWeekSchedule(User user)
+        public static List<List<LessonInfo>> GetWeekSchedule(SchOfGroup schedule)
         {
-            var lst = new List<DaySchedule>();
+            Week week = CurrentSubject.GetCurrentWeek(); 
+            var lst = new List<List<LessonInfo>>();
             lst.Capacity = 7;
-            var time = System.DateTime.Now;
-            Week week = CurrentSubject.GetCurrentWeek();
-            string url = "";
-            Schedule schedule = new Schedule(); 
-            if (user.Info == User.UserInfo.bachelor)
-            {
-                url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + user.group;
-                string response = SchRequests.SchRequests.Request(url);
-                schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfGroup>(response);
-            }
-            if (user.Info == User.UserInfo.teacher)
-            {
-                url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + user.id; // ?
-                string response = SchRequests.SchRequests.Request(url);
-                schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfTeacher>(response);
-            }
             for (int i = 0; i < 7; i++)
             {
-                List<Lesson> dayles = schedule.lessons.Where(l => (TimeOfLesson.Parse(l.timeslot).day == i) &&
-                (TimeOfLesson.Parse(l.timeslot).week == week.type)).ToList();
-                lst[i] = new DaySchedule(user, week, new Date(), dayles);
+                lst.Add(DaySchedule.GetDaySchedule(schedule, i, week));
             }
-            return new WeekSchedule(user, lst, week);
+            return lst; 
+        }
+
+        /// <summary>
+        /// Создаёт массив строковых описаний дней недели
+        /// </summary>
+        /// <returns></returns>
+        public string[][] ToText(this List<List<LessonInfo>> l)
+        {
+            string[][] str = new string[7];
+            for (int i = 0; i < 7; i++)
+                str[i] = DaySchedule.ToText(l[i]); 
+            return str; 
         }
     }
 }
