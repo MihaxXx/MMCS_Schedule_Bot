@@ -205,7 +205,7 @@ namespace API
         /// Создаёт массив строк, в которых записано расписание на день (первая строчка - заголовок)
         /// </summary>
         /// <returns></returns>
-        public string[] ToText(this List<LessonInfo> l) 
+        public string[] ToText(List<LessonInfo> l) 
         {
             string[] str = new string[l.lessons.Count + 1];
             str[0] = $"Расписание на день для '{user.id}'";
@@ -245,7 +245,7 @@ namespace API
         /// Создаёт массив строковых описаний дней недели
         /// </summary>
         /// <returns></returns>
-        public string[][] ToText(this List<List<LessonInfo>> l)
+        public string[][] ToText(List<List<LessonInfo>> l)
         {
             string[][] str = new string[7];
             for (int i = 0; i < 7; i++)
