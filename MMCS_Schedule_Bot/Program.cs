@@ -323,7 +323,7 @@ namespace Console_Schedule_Bot
 					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
 					{
                         int index = ReturnTeachersId(msg.Text);
-                        if (index != -1)
+                        if (index != 0)
                         {
                             UserList[msg.Chat.Id].teacherId = index;
                             WriteLine("Преподаватель зареган");
