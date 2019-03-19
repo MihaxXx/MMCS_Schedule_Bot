@@ -167,6 +167,7 @@ namespace API
             {
                 var les_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot))).First();
                 var cur_res = schedule.curricula.FindAll(c => c.lessonid == les_res.id);
+		//TODO: Maybe it's possible to form groups list w/o API reqest using lesson_id
                 var gr_res = schedule.groups.FindAll(c => GetCurrentLesson(c.num).Item2 == cur_res);
                 return (les_res, cur_res, gr_res);
             }
