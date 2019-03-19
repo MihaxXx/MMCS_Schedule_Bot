@@ -152,7 +152,30 @@ namespace API
 			}
             return (new Lesson(),new List<Curriculum>());  
         }
-	}
+
+        /// <summary> 
+        /// Gets nearest Lesson for the Teacher 
+        /// </summary> 
+        /// <param name="teacherID"></param> 
+        /// <returns></returns> 
+        public static (Lesson, List<Curriculum>, List<Group>) GetCurrentLessonforTeacher(int teacherID)
+        {
+            string url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + teacherID;
+            string response = SchRequests.SchRequests.Request(url);
+            SchOfTeacher schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfTeacher>(response);
+            if (schedule.lessons.Count > 0)
+            {
+                var les_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot))).First();
+                var cur_res = schedule.curricula.FindAll(c => c.lessonid == les_res.id);
+                var gr_res = schedule.groups.FindAll(c => GetCurrentLesson(c.num).Item2 == cur_res);
+                return (les_res, cur_res, gr_res);
+            }
+            else
+            {
+                return (new Lesson(), new List<Curriculum>(), new List<Group>());
+            }
+        }
+    }
 
     public static class TeacherMethods
     {
