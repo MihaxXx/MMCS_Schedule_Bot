@@ -149,7 +149,7 @@ namespace Console_Schedule_Bot
 					case "/knowme":
 					case "знаешь меня?":
                         if (UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
-                            Answer = "Да, вы " + TeacherList[UserList[msg.Chat.Id].teacherId].ToString();
+                            Answer = $"Да, вы {TeacherList[UserList[msg.Chat.Id].teacherId].name}, Id = {TeacherList[UserList[msg.Chat.Id].teacherId].id}";     //TODO Убрать вывод ID; База старая, так что выводим только ФИО!!!
                         else
 						    Answer = "Да, ты " + UserList[msg.Chat.Id].id.ToString();
 						break;
@@ -237,11 +237,27 @@ namespace Console_Schedule_Bot
 		}
 
         /// <summary>
-        /// Returns Id of teacher or -1
+        /// Returns Id of teacher, -1 if more than 1 match, 0 if no matches
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        static int ReturnTeachersId(string s) => TeacherList.FirstOrDefault(t => t.Value.name.ToLower() == s.ToLower()).Key;
+        static int ReturnTeachersId(string s)
+        {
+            //TeacherList.FirstOrDefault(t => t.Value.name.ToLower() == s.ToLower()).Key;
+            s = s.ToLower();
+            int result = 0;
+            int n = 0;
+            foreach (var x in TeacherList)
+                if (x.Value.name.ToLower().Contains(s))
+                    (result,n) = (x.Value.id,n+1);
+            if (n == 0)
+                return 0;       //нет совпадений
+            else if (n == 1)
+                return result;      //одно совпадение
+            else
+                return -1;      //несколько совпадений
+        }
+
 
 		/// <summary>
 		/// Registration of new user in bot's DB
@@ -310,7 +326,7 @@ namespace Console_Schedule_Bot
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
 						UserList[msg.Chat.Id].Info = User.UserInfo.teacher;  //Запись данных
-						Answer = "Напишите ваше ФИО.";
+						Answer = "Введите вашу фамилию.";
 
 						WriteLine("Записал тип пользователя");
 
@@ -323,7 +339,7 @@ namespace Console_Schedule_Bot
 					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
 					{
                         int index = ReturnTeachersId(msg.Text);
-                        if (index != -1)
+                        if (index != 0 && index != -1)
                         {
                             UserList[msg.Chat.Id].teacherId = index;
                             WriteLine("Преподаватель зареган");
@@ -332,7 +348,10 @@ namespace Console_Schedule_Bot
 
                             Json_Data.WriteData();
                         }
-                        else Answer = "Ошибка, преподаватель не найден! Попробуйте ещё раз.";
+                        else if (index == -1)
+                            Answer = "Найдено несколько совпадений по фамилии. Пожалуйста, введите полностью ваше ФИО.";
+                        else 
+                            Answer = "Ошибка, преподаватель не найден! Попробуйте ещё раз.";
 					}
 					else
 					{
