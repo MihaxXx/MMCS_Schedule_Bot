@@ -144,7 +144,7 @@ namespace Console_Schedule_Bot
                         if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
                             Answer = LessonLstCurToAswr(CurrentSubject.GetCurrentLesson(UserList[msg.Chat.Id].groupid));
                         else
-                            Answer = "Эта команда работает пока только для студентов(";  //TODO Ближайшая пара препода
+                            Answer = LessonLstCurToAswrTeacher(CurrentSubject.GetCurrentLessonforTeacher(UserList[msg.Chat.Id].teacherId)); ; 
 						break;
 					case "/knowme":
 					case "знаешь меня?":
@@ -389,5 +389,16 @@ namespace Console_Schedule_Bot
 		{
 			return LC.Item1.ToString() + "\n" + string.Join('\n', LC.Item2);
 		}
-	}
+
+        /// <summary>
+        /// вывод строки для ближайшкй пары препода
+        /// </summary>
+        /// <param name="LCG"></param>
+        /// <returns></returns>
+        static string LessonLstCurToAswrTeacher((Lesson, List<Curriculum>, List<Group>) LCG)
+        {
+            return LCG.Item1.ToString() + "\n" + string.Join('\n', LCG.Item2) + string.Join('\n', LCG.Item3);
+           
+        }
+    }
 }

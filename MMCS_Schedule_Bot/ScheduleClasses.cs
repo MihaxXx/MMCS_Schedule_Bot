@@ -119,6 +119,33 @@ namespace API
                 cur.Print();
         }
     }
+
+    /// <summary>
+    /// Расписание преподавателя 
+    /// </summary>
+    [DataContract]
+    public class SchOfTeacher
+    {
+        [DataMember]
+        // Список предметов
+        public List<Lesson> lessons { get; set; }
+
+        [DataMember]
+        // Список расписаний 
+        public List<Curriculum> curricula { get; set; }
+        [DataMember]
+        //список групп
+        public List<Group> groups { get; set; }
+        public void Print()
+        {
+            foreach (Lesson lesson in lessons)
+                lesson.Print();
+            foreach (Curriculum cur in curricula)
+                cur.Print();
+            foreach (Group gr in groups)
+                gr.Print();
+        }
+    }
 	/// <summary>
 	/// Группа
 	/// </summary>
