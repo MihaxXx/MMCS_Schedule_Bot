@@ -362,7 +362,7 @@ namespace Console_Schedule_Bot
                         }
                         else
                         {
-                            if (int.TryParse(msg.Text, out int n))
+                            if (int.TryParse(msg.Text, out int n) && n-1< NameMatches[msg.Chat.Id].Length && n-1>=0)
                             {
                                 UserList[msg.Chat.Id].teacherId = NameMatches[msg.Chat.Id][n-1].id;
                                 WriteLine("Преподаватель зареган");
