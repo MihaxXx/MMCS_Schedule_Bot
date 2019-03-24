@@ -135,14 +135,14 @@ namespace API
         public List<Curriculum> curricula { get; set; }
         [DataMember]
         //список групп
-        public List<Group> groups { get; set; }
+        public List<TechGroup> groups { get; set; }
         public void Print()
         {
-            foreach (Lesson lesson in lessons)
+            foreach (var lesson in lessons)
                 lesson.Print();
-            foreach (Curriculum cur in curricula)
+            foreach (var cur in curricula)
                 cur.Print();
-            foreach (Group gr in groups)
+            foreach (var gr in groups)
                 gr.Print();
         }
     }
@@ -312,4 +312,36 @@ namespace API
             return $"{id}, {degree}";
         }
     }
+	[DataContract]
+	/// <summary>
+	/// Класс группы 
+	/// </summary>
+	public class TechGroup
+	{
+		[DataMember]
+		public int uberid { get; set; }
+
+		[DataMember]
+		public int groupnum { get; set; }
+
+		[DataMember]
+		public int gradenum { get; set; }
+
+		[DataMember]
+		public string degree { get; set; }
+
+		[DataMember]
+		public string name { get; set; }
+
+		public void Print()
+		{
+			Console.WriteLine($"{uberid}, {groupnum}, {gradenum}, {degree}, {name}");
+		}
+
+		public override string ToString()
+		{
+			return $"{uberid}, {groupnum}, {gradenum}, {degree}, {name}";
+		}
+	}
+
 }

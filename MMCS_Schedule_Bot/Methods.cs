@@ -11,14 +11,22 @@ namespace API
 	/// <summary>
 	/// Time-slot struct
 	/// </summary>
-	public struct TimeOfLesson
+	public class TimeOfLesson
     {
+		//0..6 = пн..вс
         public int day { get; set; }
         public int starth { get; set; }
         public int startm { get; set; }
         public int finishh { get; set; }
         public int finishm { get; set; }
+		//"full" = -1,"upper"= 0, "lower"= 1
 		public int week { get; set; }
+
+		public override string ToString()
+		{
+			//TODO:DayToStr and WeekToStr
+			return (day + 1) + ". " + starth + ":" + startm + " - " + finishh + ":" + finishm + " " + week + ". н.";
+		}
 
 		/// <summary>
 		/// Silent convert time units from string to integer
@@ -94,7 +102,7 @@ namespace API
 
 			return res;
 		}
-    }
+	}
 
     public static class CurrentSubject
 	{ 
@@ -158,7 +166,7 @@ namespace API
         /// </summary> 
         /// <param name="teacherID"></param> 
         /// <returns></returns> 
-        public static (Lesson, List<Curriculum>, List<Group>) GetCurrentLessonforTeacher(int teacherID)
+        public static (Lesson, List<Curriculum>, List<TechGroup>) GetCurrentLessonforTeacher(int teacherID)
         {
             string url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + teacherID;
             string response = SchRequests.SchRequests.Request(url);
@@ -168,15 +176,103 @@ namespace API
                 var les_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot))).First();
                 var cur_res = schedule.curricula.FindAll(c => c.lessonid == les_res.id);
 		//TODO: Maybe it's possible to form groups list w/o API reqest using lesson_id
-                var gr_res = schedule.groups.FindAll(c => GetCurrentLesson(c.num).Item2 == cur_res);
+                var gr_res = schedule.groups.FindAll(g => g.uberid == les_res.uberid);
                 return (les_res, cur_res, gr_res);
             }
             else
             {
-                return (new Lesson(), new List<Curriculum>(), new List<Group>());
+                return (new Lesson(), new List<Curriculum>(), new List<TechGroup>());
             }
         }
-    }
+		/// <summary>
+		/// Comparison<(Lesson, List<Curriculum>)>
+		/// </summary>
+		/// <param name="llc1"></param>
+		/// <param name="llc2"></param>
+		/// <returns></returns>
+		private static int CmpLLCByDayAndTime((Lesson, List<Curriculum>) llc1, (Lesson, List<Curriculum>) llc2)
+		{
+			var tol1 = TimeOfLesson.Parse(llc1.Item1.timeslot);
+			var tol2 = TimeOfLesson.Parse(llc2.Item1.timeslot);
+			return (tol1.day * 24 + tol1.starth * 60 + tol1.startm) - (tol2.day * 24 + tol2.starth * 60 + tol2.startm);
+		}
+		/// <summary>
+		/// Ordered Week Schedule
+		/// </summary>
+		/// <param name="groupID"></param>
+		/// <returns></returns>
+		public static List<(Lesson, List<Curriculum>)> GetWeekSchedule(int groupID)
+		{
+			var week = CurrentSubject.GetCurrentWeek();
+			string url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + groupID;
+			string response = SchRequests.SchRequests.Request(url);
+			var schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfGroup>(response);
+			var res = new List<(Lesson, List<Curriculum>)>();
+			if (schedule.lessons.Count > 0)
+			{
+				foreach (var les in schedule.lessons)
+					res.Add((les, schedule.curricula.FindAll(c => c.lessonid == les.id)));
+			}
+			res.Sort(CmpLLCByDayAndTime);
+			return res;
+		}
+
+		/// <summary>
+		/// Ordered <paramref name="day"/> schedule
+		/// </summary>
+		/// <param name="groupID"></param>
+		/// <param name="day">Day of week, 0..6</param>
+		/// <returns></returns>
+		public static List<(Lesson, List<Curriculum>)> GetDaySchedule(int groupID, int day)
+		{
+			return GetWeekSchedule(groupID).FindAll(LLC => TimeOfLesson.Parse(LLC.Item1.timeslot).day == day);
+		}
+
+		/// <summary>
+		/// Comparison<(Lesson, List<Curriculum>, List<TechGroup>)>
+		/// </summary>
+		/// <param name="llc1"></param>
+		/// <param name="llc2"></param>
+		/// <returns></returns>
+		private static int CmpLLCGByDayAndTime((Lesson, List<Curriculum>, List<TechGroup>) llc1, (Lesson, List<Curriculum>, List<TechGroup>) llc2)
+		{
+			var tol1 = TimeOfLesson.Parse(llc1.Item1.timeslot);
+			var tol2 = TimeOfLesson.Parse(llc2.Item1.timeslot);
+			return (tol1.day * 24 + tol1.starth * 60 + tol1.startm) - (tol2.day * 24 + tol2.starth * 60 + tol2.startm);
+		}
+
+		/// <summary>
+		/// Ordered Week Schedule for teacher
+		/// </summary>
+		/// <param name="teacherID"></param>
+		/// <returns></returns>
+		public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetWeekScheduleforTeacher(int teacherID)
+		{
+			var week = CurrentSubject.GetCurrentWeek();
+			string url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + teacherID;
+			string response = SchRequests.SchRequests.Request(url);
+			var schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfTeacher>(response);
+			var res = new List<(Lesson, List<Curriculum>, List<TechGroup>)>();
+			if (schedule.lessons.Count > 0)
+			{
+				foreach (var les in schedule.lessons)
+					res.Add((les, schedule.curricula.FindAll(c => c.lessonid == les.id),schedule.groups.FindAll(g => g.uberid == les.uberid)));
+			}
+			res.Sort(CmpLLCGByDayAndTime);
+			return res;
+		}
+
+		/// <summary>
+		/// Ordered <paramref name="day"/> schedule for teacher
+		/// </summary>
+		/// <param name="teacherID"></param>
+		/// <param name="day">Day of week, 0..6</param>
+		/// <returns></returns>
+		public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetDayScheduleforTeacher(int teacherID, int day)
+		{
+			return GetWeekScheduleforTeacher(teacherID).FindAll(LLCG => TimeOfLesson.Parse(LLCG.Item1.timeslot).day == day);
+		}
+	}
 
     public static class TeacherMethods
     {
