@@ -248,7 +248,7 @@ namespace Console_Schedule_Bot
 					case "/info":
 					case "информация":
 						//TODO: Write sth about creators XD
-						Answer = "Меня создали ...";
+						Answer = "Меня создали Миша, Дима, Дима, Глеб, Никита, Ира, Максим.";
 						break;
 
                     default:
