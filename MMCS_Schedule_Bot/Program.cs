@@ -254,7 +254,7 @@ namespace Console_Schedule_Bot
 					case "/info":
 					case "информация":
 						//TODO: Write sth about creators XD
-						Answer = "Меня создали ...";
+						Answer = "Меня создали Миша, Дима, Дима, Глеб, Никита, Ира, Максим.";
 						break;
 
                     default:
@@ -327,7 +327,7 @@ namespace Console_Schedule_Bot
             s = s.ToLower();
             var lst = new List<Teacher>();
             foreach (var x in TeacherList)
-                if (x.Value.name.ToLower().StartsWith(s))
+                if (s.Length>3 && x.Value.name.ToLower().StartsWith(s))
                     lst.Add(x.Value);
             return lst.ToArray();
         }
