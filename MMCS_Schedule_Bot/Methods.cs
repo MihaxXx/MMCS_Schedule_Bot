@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using SchRequests; 
 
-/// <summary>
-/// Содержит методы для получения взаимодействия с API расписания
-/// </summary>
 namespace API
 {
 	/// <summary>
@@ -62,12 +59,12 @@ namespace API
 			}
 			return t;
 		}
-		/// <summary>
-		/// Counts number of minutes before lesson starts
-		/// </summary>
-		/// <param name="Lesson's time-slot"></param>
-		/// <returns></returns>
-		static public int GetMinsToLesson(TimeOfLesson ToL)
+        /// <summary>
+        /// Counts number of minutes before lesson starts
+        /// </summary>
+        /// <param name="ToL">Lesson's time-slot</param>
+        /// <returns></returns>
+        static public int GetMinsToLesson(TimeOfLesson ToL)
 		{
 			int res = 0;
 			int CurWeek = CurrentSubject.GetCurrentWeek().type;
@@ -185,7 +182,7 @@ namespace API
             }
         }
 		/// <summary>
-		/// Comparison<(Lesson, List<Curriculum>)>
+		/// Comparison(Lesson, List of Curriculum)
 		/// </summary>
 		/// <param name="llc1"></param>
 		/// <param name="llc2"></param>
@@ -229,7 +226,7 @@ namespace API
 		}
 
 		/// <summary>
-		/// Comparison<(Lesson, List<Curriculum>, List<TechGroup>)>
+		/// Comparison(Lesson, List of Curriculum, List of TechGroup)
 		/// </summary>
 		/// <param name="llc1"></param>
 		/// <param name="llc2"></param>

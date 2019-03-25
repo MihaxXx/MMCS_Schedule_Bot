@@ -134,6 +134,12 @@ namespace Console_Schedule_Bot
 
             string Answer = "Server Error";
 
+            if (System.DateTime.UtcNow.Subtract(msg.Date).TotalMinutes > 3)
+            {
+                await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
+                return;
+            }
+
             if (!IsRegistered(msg.Chat.Id))
             {
                 if (!UserList.ContainsKey(msg.Chat.Id))
@@ -335,8 +341,9 @@ namespace Console_Schedule_Bot
 		static string Registration(Telegram.Bot.Types.Message msg)
 		{
 			//TODO: Get rid of all String.Empty and "" because they can lead to exeption
-			string Answer = String.Empty;
-			msg.Text = msg.Text.ToLower();
+			string Answer = "Введены неверные данные, повторите попытку.";
+
+            msg.Text = msg.Text.ToLower();
 
             switch (msg.Text)
 			{
@@ -350,7 +357,9 @@ namespace Console_Schedule_Bot
                         Answer = "Вы бакалавр, магистр, аспирант или преподаватель?";
 						UserList[msg.Chat.Id].ident++;
 					}
-					break;
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
 				case "аспирант":
 					if (UserList[msg.Chat.Id].ident == 1)
 					{
@@ -404,7 +413,12 @@ namespace Console_Schedule_Bot
                     else
                         Answer = "Введены неверные данные, повторите попытку.";
                     break;
-				default:
+                case "/forget":
+                case "забудь меня":
+                    UserList[msg.Chat.Id].ident = 0;
+                    Answer = "Я тебя забыл! Для повторной регистрации пиши /start";
+                    break;
+                default:
 					if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
 					{
                         if (!NameMatches.ContainsKey(msg.Chat.Id))
@@ -483,7 +497,12 @@ namespace Console_Schedule_Bot
         /// <returns></returns>
         static string LessonToStr((Lesson, List<Curriculum>)LC)
 		{
-			return LC.Item1.timeslot + "\n" + string.Join('\n', LC.Item2);
+            string res = string.Empty;
+            if (LC.Item2.Count > 0)
+                res = LC.Item1.timeslot + "\n" + string.Join('\n', LC.Item2);
+            else
+                res = "Нет информации о парах для твоей группы.";
+            return res;
 			//TODO: In case of equal subjucts print subject name only once, then all teachers and rooms
 			//TODO: parse timeslot to TimeOfLesson
 		}
@@ -495,9 +514,14 @@ namespace Console_Schedule_Bot
 		/// <returns></returns>
 		static string LessonTechToStr((Lesson, List<Curriculum>, List<TechGroup>) LCG)
         {
-            return LCG.Item1.timeslot + "\n" + string.Join('\n', LCG.Item2.Select(c => c.subjectname+", ауд."+c.roomname)) +"\n"+ string.Join("; ", LCG.Item3.Select(g => g.gradenum+"."+g.groupnum));
-			//TODO: parse timeslot to TimeOfLesson
-		}
+            string res = string.Empty;
+            if (LCG.Item3.Count > 0)
+                res = LCG.Item1.timeslot + "\n" + string.Join('\n', LCG.Item2.Select(c => c.subjectname+", ауд."+c.roomname)) +"\n"+ string.Join("; ", LCG.Item3.Select(g => g.gradenum+"."+g.groupnum));
+            else
+                res = "Нет информации о парах для вас.";
+            return res;
+            //TODO: parse timeslot to TimeOfLesson
+        }
 
 		/// <summary>
 		/// Enum for days of week
