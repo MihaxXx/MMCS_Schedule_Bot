@@ -321,7 +321,7 @@ namespace Console_Schedule_Bot
             s = s.ToLower();
             var lst = new List<Teacher>();
             foreach (var x in TeacherList)
-                if (x.Value.name.ToLower().StartsWith(s))
+                if (s.Length>3 && x.Value.name.ToLower().StartsWith(s))
                     lst.Add(x.Value);
             return lst.ToArray();
         }
