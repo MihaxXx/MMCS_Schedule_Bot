@@ -64,10 +64,10 @@ namespace API
         /// </summary>
         /// <param name="ToL">Lesson's time-slot</param>
         /// <returns></returns>
-        static public int GetMinsToLesson(TimeOfLesson ToL)
+        static public int GetMinsToLesson(TimeOfLesson ToL, Week week)
 		{
 			int res = 0;
-			int CurWeek = CurrentSubject.GetCurrentWeek().type;
+			int CurWeek = week.type;
 			var CurTime = System.DateTime.Now;
 			int CurDay = (int)CurTime.DayOfWeek - 1;
 			int days = 0;
@@ -151,7 +151,8 @@ namespace API
 			SchOfGroup schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfGroup>(response);
 			if (schedule.lessons.Count > 0)
 			{
-				var l_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot))).First();
+                var cur_week = GetCurrentWeek();
+				var l_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot),cur_week)).First();
 				var c_res = schedule.curricula.FindAll(c => c.lessonid == l_res.id);
 				return (l_res, c_res);
 			}
@@ -170,7 +171,8 @@ namespace API
             SchOfTeacher schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfTeacher>(response);
             if (schedule.lessons.Count > 0)
             {
-                var les_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot))).First();
+                var cur_week = GetCurrentWeek();
+                var les_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot),cur_week)).First();
                 var cur_res = schedule.curricula.FindAll(c => c.lessonid == les_res.id);
 		//TODO: Maybe it's possible to form groups list w/o API reqest using lesson_id
                 var gr_res = schedule.groups.FindAll(g => g.uberid == les_res.uberid);
