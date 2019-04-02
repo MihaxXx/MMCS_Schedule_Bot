@@ -73,6 +73,15 @@ namespace Console_Schedule_Bot
                             new[]{ new KeyboardButton("Аспирант"),new KeyboardButton("Преподаватель") }
                             }
                         );
+
+        private static readonly AutoResetEvent _closing = new AutoResetEvent(false);
+
+        protected static void OnExit(object sender, ConsoleCancelEventArgs args)
+        {
+            BOT.StopReceiving();
+            WriteLine("Exit");
+            _closing.Set();
+        }
         /// <summary>
         /// Some options for keyboards
         /// </summary>
@@ -138,8 +147,8 @@ namespace Console_Schedule_Bot
 
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
             WriteLine("Ожидает сообщений");
-            ReadLine();
-            BOT.StopReceiving();
+            Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
+            _closing.WaitOne();
         }
 
         static async void BotOnMessageReceived(object sender, MessageEventArgs MessageEventArgs)
