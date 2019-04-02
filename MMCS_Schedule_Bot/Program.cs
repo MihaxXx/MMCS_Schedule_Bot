@@ -29,11 +29,11 @@ namespace Console_Schedule_Bot
             GradeInit();
 
             BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
-            WriteLine("Подключен бот");
+            WriteLine("Подключен бот.");
             BOT.OnMessage += BotOnMessageReceived;
 
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
-            WriteLine("Ожидает сообщений");
+            WriteLine("Ожидает сообщений...");
             Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
             _closing.WaitOne();
         }
@@ -68,7 +68,7 @@ namespace Console_Schedule_Bot
         protected static void OnExit(object sender, ConsoleCancelEventArgs args)
         {
             BOT.StopReceiving();
-            WriteLine("Exit");
+            WriteLine("Exit.");
             _closing.Set();
         }
 
