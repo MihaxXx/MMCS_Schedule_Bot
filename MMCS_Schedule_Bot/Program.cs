@@ -108,6 +108,22 @@ namespace Console_Schedule_Bot
             WriteLine("Список курсов получен.");
         }
 
+        static string ReadToken()
+        {
+            string token = string.Empty;
+            try
+            {
+                token = File.ReadAllText("token.key", Encoding.UTF8);
+            }
+            catch(FileNotFoundException e)
+            {
+                WriteLine("File 'token.key' wasn't found in the working directory!\nPlease save Telegram BOT token to file named 'token.key'.");
+                WriteLine(e.Message);
+                Environment.Exit(1);
+            }
+            return token;
+        }
+
 
         static void Main(string[] args)
         {
@@ -116,7 +132,7 @@ namespace Console_Schedule_Bot
             TeachersInit();
             GradeInit();
 
-            BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
+            BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
             WriteLine("Подключен бот");
             BOT.OnMessage += BotOnMessageReceived;
 
