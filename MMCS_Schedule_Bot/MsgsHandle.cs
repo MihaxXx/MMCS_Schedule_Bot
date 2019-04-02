@@ -85,9 +85,9 @@ namespace Console_Schedule_Bot
                     case "/next":
                     case "ближайшая пара":
                         if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
-                            Answer = LessonToStr(CurrentSubject.GetCurrentLesson(UserList[msg.Chat.Id].groupid));
+                            Answer = LessonToStr(CurrentSubject.GetCurrentLesson(UserList[msg.Chat.Id].groupid),true);
                         else
-                            Answer = LessonTechToStr(CurrentSubject.GetCurrentLessonforTeacher(UserList[msg.Chat.Id].teacherId));
+                            Answer = LessonTechToStr(CurrentSubject.GetCurrentLessonforTeacher(UserList[msg.Chat.Id].teacherId),true);
                         break;
                     case "/findteacher":
                     case "найти преподавателя":
@@ -119,19 +119,18 @@ namespace Console_Schedule_Bot
                     case "знаешь меня?":
 
                         if (UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
-                            Answer = $"Да, вы {TeacherList[UserList[msg.Chat.Id].teacherId].name}, Id = {TeacherList[UserList[msg.Chat.Id].teacherId].id}";     //TODO Убрать вывод ID; База старая, так что выводим только ФИО!!!
+                            Answer = $"Да, вы {TeacherList[UserList[msg.Chat.Id].teacherId].name}, Id = {TeacherList[UserList[msg.Chat.Id].teacherId].id}";     //TODO: Убрать вывод ID; База старая, так что выводим только ФИО!!!
                         else
                             Answer = "Да, ты " + UserList[msg.Chat.Id].id.ToString();
                         break;
-
 
                     case "/forget":
                     case "забудь меня":
                         UserList[msg.Chat.Id].ident = 0;
                         Json_Data.WriteData();
                         Answer = "Я тебя забыл! Для повторной регистрации пиши /start";
-                        break;
-
+                        await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
+                        return;
 
                     case "помощь":
                     case "/help":
@@ -417,6 +416,7 @@ namespace Console_Schedule_Bot
         /// Enum for days of week
         /// </summary>
         public enum DayOfWeek { Понедельник = 0, Вторник, Среда, Четверг, Пятница, Суббота, Воскресенье };
+        public enum DayOfW { ПН = 0, ВТ, СР, ЧТ, ПТ, СБ, ВС };
 
         static int GetCurDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 6) % 7;
         static int GetNextDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 7) % 7;
@@ -450,16 +450,31 @@ namespace Console_Schedule_Bot
         /// </summary>
         /// <param name="LC"></param>
         /// <returns></returns>
-        static string LessonToStr((Lesson, List<Curriculum>) LC)
+        static string LessonToStr((Lesson, List<Curriculum>) LC, bool showDoW =  false)
         {
             string res = string.Empty;
             if (LC.Item2.Count > 0)
-                res = LC.Item1.timeslot + "\n" + string.Join('\n', LC.Item2);
+            {
+                var ts = TimeOfLesson.Parse(LC.Item1.timeslot);
+                res = (showDoW ? "*"+(DayOfW)ts.day+"* " : "") + $"{ts.starth}:{ts.startm.ToString("D2")} - {ts.finishh}:{ts.finishm.ToString("D2")}" + (ts.week!=-1? (ts.week==0 ? " в.н.":" н.н."):"");
+                //res = LC.Item1.timeslot + "\n";
+                if (LC.Item2.Count > 1)
+                {
+                    //TODO: Use subjabbr if length of subjname is too long
+                    if (LC.Item2.TrueForAll(c => c.subjectid == LC.Item2[0].subjectid))
+                        if (LC.Item2.TrueForAll(c => c.teacherid == LC.Item2[0].teacherid))
+                            res += "  –  *" + LC.Item2[0].subjectname + "*,\n    преп. _" + LC.Item2[0].teachername + "_, ауд. " + String.Join("; ", LC.Item2.Select(c => "*" + c.roomname + "*"));
+                        else
+                            res += "  –  *" + LC.Item2[0].subjectname + "*,\n" + String.Join("\n", LC.Item2.Select(c => "    преп. _" + c.teachername + "_, ауд. *" + c.roomname + "*"));
+                    else
+                        res += "\n" + String.Join('\n', LC.Item2.Select(c => $"    *{c.subjectname}*, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
+                }
+                else
+                    res += "  –  " + String.Join('\n', LC.Item2.Select(c => $"*{c.subjectname}*, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
+            }
             else
                 res = "Нет информации о парах для твоей группы.";
             return res;
-            //TODO: In case of equal subjucts print subject name only once, then all teachers and rooms
-            //TODO: parse timeslot to TimeOfLesson
         }
 
         /// <summary>
@@ -513,18 +528,20 @@ namespace Console_Schedule_Bot
         /// </summary>
         /// <param name="LCG"></param>
         /// <returns></returns>
-        static string LessonTechToStr((Lesson, List<Curriculum>, List<TechGroup>) LCG)
+        static string LessonTechToStr((Lesson, List<Curriculum>, List<TechGroup>) LCG, bool showDoW = false)
         {
             string res = string.Empty;
             if (LCG.Item3.Count > 0)
-                res = LCG.Item1.timeslot + "\n" +
-                 string.Join('\n', LCG.Item2.Select(c => c.subjectname + ", ауд." + c.roomname)) + "\n" +
-                 StuDegreeShort(LCG.Item3.First().degree) + 
-                 string.Join("; ", LCG.Item3.Select(g => g.gradenum + "." + g.groupnum));
+            {
+                var ts = TimeOfLesson.Parse(LCG.Item1.timeslot);
+                res = (showDoW ? "*" + (DayOfW)ts.day + "* " : "") + $"{ts.starth}:{ts.startm.ToString("D2")} - {ts.finishh}:{ts.finishm.ToString("D2")}" + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "") + "\n    ";
+                res += string.Join('\n', LCG.Item2.Select(c => "*" + c.subjectname + "*, ауд.*" + c.roomname)) + "*\n    " +
+                        StuDegreeShort(LCG.Item3.First().degree) + " " +
+                        "_" + string.Join(", ", LCG.Item3.Select(g => g.gradenum + "." + g.groupnum)) + "_";
+            }
             else
                 res = "Нет информации о парах для вас.";
             return res;
-            //TODO: parse timeslot to TimeOfLesson
         }
 
         /// <summary>

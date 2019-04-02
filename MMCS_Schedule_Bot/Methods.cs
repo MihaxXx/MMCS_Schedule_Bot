@@ -21,7 +21,6 @@ namespace API
 
 		public override string ToString()
 		{
-			//TODO:DayToStr and WeekToStr
 			return (day + 1) + ". " + starth + ":" + startm + " - " + finishh + ":" + finishm + " " + week + ". н.";
 		}
 
@@ -122,7 +121,6 @@ namespace API
 		/// <returns>GroupID</returns>
 		public static int CourseGroupToID(int course, int group)
 		{
-			//TODO:Change to Dict to prevent unnecessary requests
 			string response1 = SchRequests.SchRequests.Request("http://schedule.sfedu.ru/APIv0/group/list/"+ course);
 			Group[] lstOfGroups = SchRequests.SchRequests.DeSerializationFromStr<Group>(response1);
 			return lstOfGroups.Where(g => (g.num == group)).First().id;
@@ -174,7 +172,6 @@ namespace API
                 var cur_week = GetCurrentWeek();
                 var les_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot),cur_week)).First();
                 var cur_res = schedule.curricula.FindAll(c => c.lessonid == les_res.id);
-		//TODO: Maybe it's possible to form groups list w/o API reqest using lesson_id
                 var gr_res = schedule.groups.FindAll(g => g.uberid == les_res.uberid);
                 return (les_res, cur_res, gr_res);
             }
