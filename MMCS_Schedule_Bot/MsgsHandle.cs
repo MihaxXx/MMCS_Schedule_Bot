@@ -48,7 +48,7 @@ namespace Console_Schedule_Bot
                     var lst = ReturnTeachersId(msg.Text);
                     if (lst.Length == 1)
                     {
-                        Answer = LessonTechToStr(CurrentSubject.GetCurrentLessonforTeacher(lst[0].id));
+                        Answer = LessonTechToStr(CurrentSubject.GetCurrentLessonforTeacher(lst[0].id), true);
                         UserList[msg.Chat.Id].ident = 3;
                     }
                     else if (lst.Length > 1)
@@ -68,7 +68,8 @@ namespace Console_Schedule_Bot
                 {
                     if (int.TryParse(msg.Text, out int n) && n - 1 < NameMatches[msg.Chat.Id].Length && n - 1 >= 0)
                     {
-                        Answer = LessonTechToStr(CurrentSubject.GetCurrentLessonforTeacher(NameMatches[msg.Chat.Id][n - 1].id));
+                        var LCG = CurrentSubject.GetCurrentLessonforTeacher(NameMatches[msg.Chat.Id][n - 1].id);
+                        Answer = LessonTechToStr(LCG, true);
                         UserList[msg.Chat.Id].ident = 3;
                         NameMatches.Remove(msg.Chat.Id);
                     }
@@ -422,15 +423,15 @@ namespace Console_Schedule_Bot
         static int GetNextDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 7) % 7;
 
         private static readonly string _help = @"Список команд: 
-/next - какая ближайшая пара
-/today - расписание на сегодня
-/tomorrow - список пар на завтра
-/week - расписание на неделю
-/findteacher - поиск преподавателя
-/info - краткое описание бота    
-/knowme - показать ваш id
-/forget - сменить пользователя
-/help - список команд";
+/next — какая ближайшая пара
+/today — расписание на сегодня
+/tomorrow — список пар на завтра
+/week — расписание на неделю
+/findteacher — поиск преподавателя
+/info — краткое описание бота    
+/knowme — показать ваш id
+/forget — сменить пользователя
+/help — список команд";
 
         static string StuDegreeShort(string degree)
         {
@@ -456,21 +457,21 @@ namespace Console_Schedule_Bot
             if (LC.Item2.Count > 0)
             {
                 var ts = TimeOfLesson.Parse(LC.Item1.timeslot);
-                res = (showDoW ? "*"+(DayOfW)ts.day+"* " : "") + $"{ts.starth}:{ts.startm.ToString("D2")} - {ts.finishh}:{ts.finishm.ToString("D2")}" + (ts.week!=-1? (ts.week==0 ? " в.н.":" н.н."):"");
+                res = (showDoW ? "*"+(DayOfW)ts.day+"* " : "") + $"{ts.starth}:{ts.startm.ToString("D2")}–{ts.finishh}:{ts.finishm.ToString("D2")}" + (ts.week!=-1? (ts.week==0 ? " в.н.":" н.н."):"");
                 //res = LC.Item1.timeslot + "\n";
                 if (LC.Item2.Count > 1)
                 {
                     //TODO: Use subjabbr if length of subjname is too long
                     if (LC.Item2.TrueForAll(c => c.subjectid == LC.Item2[0].subjectid))
                         if (LC.Item2.TrueForAll(c => c.teacherid == LC.Item2[0].teacherid))
-                            res += "  –  *" + LC.Item2[0].subjectname + "*,\n    преп. _" + LC.Item2[0].teachername + "_, ауд. " + String.Join("; ", LC.Item2.Select(c => "*" + c.roomname + "*"));
+                            res += " — *" + LC.Item2[0].subjectname + "*,\n    преп. _" + LC.Item2[0].teachername + "_, ауд. " + String.Join("; ", LC.Item2.Select(c => "*" + c.roomname + "*"));
                         else
-                            res += "  –  *" + LC.Item2[0].subjectname + "*,\n" + String.Join("\n", LC.Item2.Select(c => "    преп. _" + c.teachername + "_, ауд. *" + c.roomname + "*"));
+                            res += " — *" + LC.Item2[0].subjectname + "*,\n" + String.Join("\n", LC.Item2.Select(c => "    преп. _" + c.teachername + "_, ауд. *" + c.roomname + "*"));
                     else
                         res += "\n" + String.Join('\n', LC.Item2.Select(c => $"    *{c.subjectname}*, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
                 }
                 else
-                    res += "  –  " + String.Join('\n', LC.Item2.Select(c => $"*{c.subjectname}*, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
+                    res += " — " + String.Join('\n', LC.Item2.Select(c => $"*{c.subjectname}*, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
             }
             else
                 res = "Нет информации о парах для твоей группы.";
@@ -531,10 +532,13 @@ namespace Console_Schedule_Bot
         static string LessonTechToStr((Lesson, List<Curriculum>, List<TechGroup>) LCG, bool showDoW = false)
         {
             string res = string.Empty;
+ 
             if (LCG.Item3.Count > 0)
             {
                 var ts = TimeOfLesson.Parse(LCG.Item1.timeslot);
-                res = (showDoW ? "*" + (DayOfW)ts.day + "* " : "") + $"{ts.starth}:{ts.startm.ToString("D2")} - {ts.finishh}:{ts.finishm.ToString("D2")}" + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "") + "\n    ";
+                res = (showDoW ? "*" + (DayOfW)ts.day + "* " : "") + 
+                    $"{ts.starth}:{ts.startm.ToString("D2")}–{ts.finishh}:{ts.finishm.ToString("D2")}" 
+                    + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "") + " — ";
                 res += string.Join('\n', LCG.Item2.Select(c => "*" + c.subjectname + "*, ауд.*" + c.roomname)) + "*\n    " +
                         StuDegreeShort(LCG.Item3.First().degree) + " " +
                         "_" + string.Join(", ", LCG.Item3.Select(g => g.gradenum + "." + g.groupnum)) + "_";

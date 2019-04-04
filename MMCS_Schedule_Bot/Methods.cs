@@ -1,7 +1,8 @@
 ﻿using System.Runtime.Serialization;
 using System.Collections.Generic;
 using System.Linq;
-using SchRequests; 
+using SchRequests;
+using System;
 
 namespace API
 {
@@ -170,7 +171,8 @@ namespace API
             if (schedule.lessons.Count > 0)
             {
                 var cur_week = GetCurrentWeek();
-                var les_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot),cur_week)).First();
+                var les_res = schedule.lessons.
+                    OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot),cur_week)).First();
                 var cur_res = schedule.curricula.FindAll(c => c.lessonid == les_res.id);
                 var gr_res = schedule.groups.FindAll(g => g.uberid == les_res.uberid);
                 return (les_res, cur_res, gr_res);
