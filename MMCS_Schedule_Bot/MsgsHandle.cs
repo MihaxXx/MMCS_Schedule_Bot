@@ -48,9 +48,6 @@ namespace Console_Schedule_Bot
                     var lst = ReturnTeachersId(msg.Text);
                     if (lst.Length == 1)
                     {
-                        //var LCG = CurrentSubject.GetCurrentLessonforTeacher(lst[0].id);
-                        //var ts = TimeOfLesson.Parse(LCG.Item1.timeslot);
-                        //Answer = (DayOfWeek)ts.day + " " + LessonTechToStr(LCG);
                         Answer = LessonTechToStr(CurrentSubject.GetCurrentLessonforTeacher(lst[0].id), true);
                         UserList[msg.Chat.Id].ident = 3;
                     }
@@ -72,8 +69,7 @@ namespace Console_Schedule_Bot
                     if (int.TryParse(msg.Text, out int n) && n - 1 < NameMatches[msg.Chat.Id].Length && n - 1 >= 0)
                     {
                         var LCG = CurrentSubject.GetCurrentLessonforTeacher(NameMatches[msg.Chat.Id][n - 1].id);
-                        //var ts = TimeOfLesson.Parse(LCG.Item1.timeslot);
-                        Answer = /*(DayOfWeek)ts.day + " " + */LessonTechToStr(LCG, true);
+                        Answer = LessonTechToStr(LCG, true);
                         UserList[msg.Chat.Id].ident = 3;
                         NameMatches.Remove(msg.Chat.Id);
                     }
