@@ -3,13 +3,60 @@ using System.Collections.Generic;
 using System.Linq;
 using SchRequests;
 using System;
+using System.IO;
 
 namespace API
 {
-	/// <summary>
-	/// Time-slot struct
-	/// </summary>
-	public class TimeOfLesson
+    public class Elective
+    {
+        public string name { get; set; }
+        public string teacher { get; set; }
+        public string day { get; set; }
+        public string time { get; set; }
+        public int? room { get; set; }
+
+        public Elective(string n, string teach, string d, string t, string r) 
+        {
+            name = n;
+            teacher = teach;
+            day = d;
+            time = t;
+            if (int.TryParse(r, out var tmp))
+                room = tmp;
+            else
+                room = null;
+
+        }
+
+        public override string ToString()
+        {
+            return $"{(day=="уточняйте" ? "День уточняйте" : $"*{day}*" )}, " +
+                $"{(time == "уточняйте" ? "начало уточняйте" : $"*{time}*")} " +
+                $"— *{name}*, \n" +
+                $"\t преп. _{teacher}_, " +
+                $"{(!room.HasValue ? "ауд уточняйте" : $"ауд. {room}")} \n\n";
+        }
+
+        static public IEnumerable<Elective> GetElectives(string fName = "Electives.csv")
+        {
+            return File.ReadLines(fName).Select(x=>x.Split(';')).
+                Select(l=>new Elective(l[0], l[1], l[2], l[3], l[4]));
+        }
+
+        static public string ElectivesToString(IEnumerable<Elective> ie)
+        {
+            string ans = "";
+            foreach (var x in ie)
+            {
+                ans += x;
+            }
+            return ans;
+        }
+    }
+    /// <summary>
+    /// Time-slot struct
+    /// </summary>
+    public class TimeOfLesson
     {
 		//0..6 = пн..вс
         public int day { get; set; }

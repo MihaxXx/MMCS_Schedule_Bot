@@ -62,7 +62,8 @@ namespace Console_Schedule_Bot
                         Answer = s;
                     }
                     else
-                        Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
+                     Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
+   
                 }
                 else
                 {
