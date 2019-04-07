@@ -19,6 +19,7 @@ using API;
 
 namespace Console_Schedule_Bot
 {
+   
     partial class Program
     {
         static void Main(string[] args)
@@ -27,6 +28,19 @@ namespace Console_Schedule_Bot
             KeyboardInit();
             TeachersInit();
             GradeInit();
+
+            
+            try
+            {
+                Program.electives = Elective.GetElectives();
+                
+                WriteLine("Список факультативов получен.");
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine("Список факультативов не был загружен!");
+            }
+            electivesStr = electives == null ? "Нет данных о факультативах" : Elective.ElectivesToString(electives);
 
             BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
             WriteLine("Подключен бот.");
