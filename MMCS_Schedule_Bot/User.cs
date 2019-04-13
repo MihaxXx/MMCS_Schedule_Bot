@@ -36,6 +36,10 @@ namespace Console_Schedule_Bot
         /// The pre lesson notify flag.
         /// </summary>
         public bool preLessonNotify = false;
+        /// <summary>
+        /// Flag that user was notified today with preLessonNotifier
+        /// </summary>
+        public bool notifiedToday = false;
 
         /// <summary>
         /// Possible types of users
