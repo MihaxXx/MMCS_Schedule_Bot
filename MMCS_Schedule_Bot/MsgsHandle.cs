@@ -95,7 +95,7 @@ namespace Console_Schedule_Bot
                 UserList[msg.Chat.Id].ident = 3;
                 Json_Data.WriteData();
                 string onOrOffMsg = onOrOff ? "включено" : "выключено";
-                Answer = $"Уведомление за 15 минут до пары *{onOrOffMsg}*.";
+                Answer = $"Уведомление за 15 минут до первой пары *{onOrOffMsg}*.";
             }
             else
             {
@@ -468,7 +468,7 @@ namespace Console_Schedule_Bot
 /info — краткое описание бота    
 /knowme — показать ваш id
 /eveningNotify - настроить вечернее уведомление
-/preLessonNotify - настроить уведомление за 15 минут до пары
+/preLessonNotify - настроить уведомление за 15 минут первой до пары
 /forget — сменить пользователя
 /help — список команд";
 
