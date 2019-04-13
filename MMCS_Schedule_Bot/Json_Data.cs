@@ -28,8 +28,9 @@ namespace Console_Schedule_Bot
                     Info = us.Value.Info,
                     teacherId = us.Value.teacherId,
                     id = us.Value.id,
-                    groupid = us.Value.groupid
-
+                    groupid = us.Value.groupid,
+                    eveningNotify = us.Value.eveningNotify,
+                    preLessonNotify = us.Value.preLessonNotify
                 };
                 i++;
             }
@@ -60,7 +61,9 @@ namespace Console_Schedule_Bot
                         id = json.User[i].id,
                         teacherId = json.User[i].teacherId,
                         Info = json.User[i].Info,
-                        groupid = json.User[i].groupid
+                        groupid = json.User[i].groupid,
+                        eveningNotify = json.User[i].eveningNotify,
+                        preLessonNotify = json.User[i].preLessonNotify
                     };
                     Program.UserList.Add(x.id, x);
                 }
