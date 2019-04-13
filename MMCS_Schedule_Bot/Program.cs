@@ -35,7 +35,7 @@ namespace Console_Schedule_Bot
 
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
             WriteLine("Ожидает сообщений...");
-            Scheduler.RunEveningNotifier().GetAwaiter().GetResult();
+            Scheduler.RunNotifier().GetAwaiter().GetResult();
             Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
             _closing.WaitOne();
         }
