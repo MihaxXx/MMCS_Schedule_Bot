@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using Telegram.Bot.Types.Enums;
 using System.Threading.Tasks;
 
 using API;
@@ -34,7 +35,6 @@ namespace Notify
                 // and start it off
                 await scheduler.Start();
 
-                // define the job and tie it to our HelloJob class
                 IJobDetail job = JobBuilder.Create<EveningNotify>()
                     .WithIdentity("evening")
                     .Build();
@@ -46,14 +46,8 @@ namespace Notify
                     .ForJob(job)
                     .Build();
 
-                // Tell quartz to schedule the job using our trigger
                 await scheduler.ScheduleJob(job, trigger);
 
-                // some sleep to show what's happening
-                await Task.Delay(TimeSpan.FromSeconds(60));
-
-                // and last shut down the scheduler when you are ready to close your program
-                await scheduler.Shutdown();
             }
             catch (SchedulerException se)
             {
@@ -72,7 +66,7 @@ namespace Notify
             /// <param name="context">Context.</param>
             public async Task Execute(IJobExecutionContext context)
             {
-                Notifier.EveningNotify();
+                await Notifier.EveningNotify();
             }
         }
     }
@@ -90,137 +84,243 @@ namespace Notify
         /// <summary>
         /// Evenings the notify.
         /// </summary>
-        public static void EveningNotify()
+        public static Task EveningNotify()
         {
-            BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
-            var targetUsersInfo = FilterUsers();
-
-            RunTasks(targetUsersInfo);
-            Console.WriteLine("Finish.");
-            System.Console.ReadLine();
+            string TOKEN = Program.ReadToken();
+            BOT = new Telegram.Bot.TelegramBotClient(TOKEN);
+            (List<User> students, List<User> teachers) = SplitUsers(Program.UserList);
+            Console.WriteLine("Notifier running...");
+            var targetStudentsInfo = FilterStudents(students);
+            var targetTeachersInfo = FilterTeachers(teachers);
+            Task studentsTask = RunTasks(targetStudentsInfo);
+            Task teachersTask = RunTasks(targetTeachersInfo);
+            //BuildPreLessonNotifiers();
+            Console.WriteLine("Notifier finished.");
+            return teachersTask;
         }
 
         /// <summary>
-        /// Adds the zeros to minutes because if lesson starts at 9:00 time parser converts it to 9:0
+        /// Builds the pre lesson notifiers.
         /// </summary>
-        /// <returns>String with right time format</returns>
-        /// <param name="minutes">Minutes.</param>
-        private static string AddZerosToMinutes(int minutes)
+        /// <param name="UserMsgs">User msgs.</param>
+        private static void BuildPreLessonNotifiers(Dictionary<long, (string, TimeOfLesson)> UserMsgs)
         {
-            string strMinutes = minutes.ToString();
-            return strMinutes[0] == '0' ? strMinutes + "0" : strMinutes;
+            foreach (var item in UserMsgs)
+            {
+                var id = item.Key;
+                var msg = item.Value.Item1;
+                var timeOfLesson = item.Value.Item2;
+                var hour = timeOfLesson.starth;
+                var minute = timeOfLesson.startm;
+
+
+            }
+        }
+
+        /// <summary>
+        /// Splits the users to students and teachers.
+        /// </summary>
+        /// <returns>List of students and list of teachers</returns>
+        /// <param name="users">Users.</param>
+        private static (List<User>, List<User>) SplitUsers(Dictionary<long, User> users)
+        {
+            List<User> students = new List<User>();
+            List<User> teachers = new List<User>();
+            foreach (var user in users)
+            {
+                if (user.Value.Info == User.UserInfo.teacher)
+                {
+                    if (user.Value.eveningNotify)
+                        teachers.Add(user.Value);
+                }
+                else
+                {
+                    if (user.Value.eveningNotify)
+                        students.Add(user.Value);
+                }
+            }
+
+            return (students, teachers);
         }
 
         /// <summary>
         /// Fetching group IDs by users course and group
         /// </summary>
         /// <returns>Set of group IDs</returns>
-        private static HashSet<int> GroupIds()
+        private static HashSet<int> GroupIDs()
         {
-            HashSet<int> groupIds = new HashSet<int>();
+            HashSet<int> groupIDs = new HashSet<int>();
             foreach (var user in Program.UserList)
             {
-                groupIds.Add(user.Value.groupid);
+                groupIDs.Add(user.Value.groupid);
             }
 
-            return groupIds;
+            return groupIDs;
+        }
+
+
+        /// <summary>
+        /// Fetching group IDs by users course and group
+        /// </summary>
+        /// <returns>Set of group IDs</returns>
+        private static HashSet<int> TeachersIDs(List<User> teachers)
+        {
+            HashSet<int> teachersIDs = new HashSet<int>();
+            foreach (var teacher in teachers)
+            {
+                teachersIDs.Add(teacher.teacherId);
+            }
+
+            return teachersIDs;
         }
 
         /// <summary>
         /// Fetching next lessons for each group ID
         /// </summary>
         /// <returns>Dict of lessons</returns>
-        /// <param name="groupIds">Group identifiers.</param>
-        private static Dictionary<int, (Lesson, List<Curriculum>)> NextLessons(HashSet<int> groupIds)
+        /// <param name="groupsIDs">Group ids.</param>
+        private static Dictionary<int, (Lesson, List<Curriculum>)> NextLessons(HashSet<int> groupsIDs)
         {
             var nextLessons = new Dictionary<int, (Lesson, List<Curriculum>)>();
 
-            foreach (int groupId in groupIds)
+            foreach (int groupID in groupsIDs)
             {
-                Console.WriteLine(groupId);
-                var nextLesson = CurrentSubject.GetCurrentLesson(groupId);
-                Lesson lesson = nextLesson.Item1;
-                List<Curriculum> curriculums = nextLesson.Item2;
-                nextLessons.Add(groupId, (lesson, curriculums));
+                var nextLesson = CurrentSubject.GetCurrentLesson(groupID);
+                nextLessons.Add(groupID, nextLesson);
             }
             return nextLessons;
         }
 
         /// <summary>
-        /// If it's sunday and we need to check for monday then 6 + 1 = 7, but week days is in (0...6)
+        /// Fetching next lessons for each teacher ID
         /// </summary>
-        /// <returns>The day number.</returns>
-        /// <param name="curDay">Current day.</param>
-        private static int FitDay(int curDay)
+        /// <returns>Dict of lessons</returns>
+        /// <param name="teachers">Teachers.</param>
+        private static Dictionary<int, (Lesson, List<Curriculum>, List<TechGroup>)> NextLessonsForTeachers(List<User> teachers)
         {
-            return curDay % 7;
+            var nextLessonsForTeachers = new Dictionary<int, (Lesson, List<Curriculum>, List<TechGroup>)>();
+
+            foreach (User teacher in teachers)
+            {
+                var nextLessonForTeacher = CurrentSubject.GetCurrentLessonforTeacher(teacher.teacherId);
+                nextLessonsForTeachers.Add(teacher.teacherId, nextLessonForTeacher);
+            }
+            return nextLessonsForTeachers;
         }
 
         /// <summary>
         /// Builds the message for user.
         /// </summary>
         /// <returns>The message for user.</returns>
-        /// <param name="timeOfLesson">Time of lesson.</param>
-        /// <param name="curDay">Current day.</param>
+        /// <param name="lesson">lesson.</param>
         /// <param name="curriculums">Curriculums.</param>
-        private static string BuildMsgForEvening(TimeOfLesson timeOfLesson, int curDay, List<Curriculum> curriculums)
+        private static string BuildMsgForEvening(Lesson lesson, List<Curriculum> curriculums)
         {
             string day = "Завтрашняя первая пара:";
-            string startm = AddZerosToMinutes(timeOfLesson.startm);
-            string finishm = AddZerosToMinutes(timeOfLesson.finishm);
-            string timeInfo = $"{timeOfLesson.starth}:{startm} - {timeOfLesson.finishh}:{finishm}";
+            string lessonInfo = Program.LessonToStr((lesson, curriculums));
 
-            string body = string.Empty;
-            foreach (Curriculum curriculum in curriculums)
-            {
-                body += $"ауд. {curriculum.roomname}\n";
-                body += $"{curriculum.subjectname}\n";
-                string teachername = curriculum.teachername;
-                string[] teachernameSplitted = teachername.Split(" ");
-                string trimmed_teachername = $"{teachernameSplitted[0]} {teachernameSplitted[1][0]}. {teachernameSplitted[2][0]}.\n";
-                body += trimmed_teachername;
-            }
+            return $"*{day}*\n{lessonInfo}";
+        }
 
-            return $"{day}\n{timeInfo}\n{body}";
+        /// <summary>
+        /// Builds the message for teacher.
+        /// </summary>
+        /// <returns>The message for user.</returns>
+        /// <param name="lesson">lesson.</param>
+        /// <param name="curriculums">Curriculums.</param>
+        /// <param name="groups">Teacher groups.</param>
+        private static string BuildMsgForTeacherEvening(Lesson lesson, List<Curriculum> curriculums, List<TechGroup> groups)
+        {
+            string day = "Завтрашняя первая пара:";
+            string lessonInfo = Program.LessonTechToStr((lesson, curriculums, groups));
+
+            return $"*{day}*\n{lessonInfo}";
         }
 
         /// <summary>
         /// Filters the users, if user have lessons tommorow, then we add him, otherwise - no.
         /// </summary>
         /// <returns>Dict of user ids and messages.</returns>
-        private static Dictionary<long, string> FilterUsers()
+        private static Dictionary<long, (string, TimeOfLesson)> FilterTeachers(List<User> teachers)
         {
-            HashSet<int> groupIds = GroupIds();
-            var nextLessons = NextLessons(groupIds);
-
-            var targetUsers = new Dictionary<long, string>();
-            foreach (var item in Program.UserList)
+            var targetTeachers = new Dictionary<long, (string, TimeOfLesson)>();
+            if (!teachers.Any())
             {
-                var user = item.Value;
-                int userGroupId = user.groupid;
-                (Lesson lesson, List<Curriculum> curriculums) = nextLessons[userGroupId];
+                return targetTeachers;
+            }
+            var nextLessonsForTeachers = NextLessonsForTeachers(teachers);
+
+            foreach (var teacher in teachers)
+            {
+                int teacherID = teacher.teacherId;
+                (Lesson lesson, List<Curriculum> curriculums, List<TechGroup> techGroups) = nextLessonsForTeachers[teacherID];
+                if (curriculums.Count == 0)
+                {
+                    Console.WriteLine($"Teacher {teacherID} has no lessons tommorow.");
+                    continue;
+                }
 
                 TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
                 int dayOfLesson = timeOfLesson.day;
-                int curDay = FitDay((int)DateTime.Now.DayOfWeek + 1);
+                int nextDay = Program.GetNextDayOfWeek();
 
-                if (curDay == dayOfLesson)
+                if (nextDay == dayOfLesson)
                 {
-                    string msg = BuildMsgForEvening(timeOfLesson, curDay, curriculums);
-                    targetUsers.Add(user.id, msg);
+                    string msg = BuildMsgForTeacherEvening(lesson, curriculums, techGroups);
+                    targetTeachers.Add(teacher.id, (msg, timeOfLesson));
                 }
             }
 
-            return targetUsers;
+            return targetTeachers;
         }
+
+        /// <summary>
+        /// Filters the users, if user have lessons tommorow, then we add him, otherwise - no.
+        /// </summary>
+        /// <returns>Dict of user ids and messages.</returns>
+        private static Dictionary<long, (string, TimeOfLesson)> FilterStudents(List<User> students)
+        {
+            HashSet<int> groupIDs = GroupIDs();
+            var targetStudents = new Dictionary<long, (string, TimeOfLesson)>();
+            if (!groupIDs.Any())
+            {
+                return targetStudents;
+            }
+            var nextLessons = NextLessons(groupIDs);
+
+            foreach (var student in students)
+            {
+                int studentGroupID = student.groupid;
+                (Lesson lesson, List<Curriculum> curriculums) = nextLessons[studentGroupID];
+
+                if (curriculums.Count == 0)
+                {
+                    Console.WriteLine($"Group {studentGroupID} has no lessons tommorow.");
+                    continue;
+                }
+                TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
+                int dayOfLesson = timeOfLesson.day;
+                int nextDay = Program.GetNextDayOfWeek();
+
+                if (nextDay == dayOfLesson)
+                {
+                    string msg = BuildMsgForEvening(lesson, curriculums);
+                    targetStudents.Add(student.id, (msg, timeOfLesson));
+                }
+            }
+
+            return targetStudents;
+        }
+
 
         /// <summary>
         /// Runs the tasks asynchronously.
         /// </summary>
         /// <param name="tasks">Tasks dict.</param>
-        public static async void RunTasks(Dictionary<long, string> tasks)
+        public static Task RunTasks(Dictionary<long, (string, TimeOfLesson)> tasks)
         {
-            await Task.WhenAll(tasks.Select(i => SendMsg(i.Key, i.Value)));
+            Task t = Task.WhenAll(tasks.Select(i => SendMsg(i.Key, i.Value.Item1)));
+            return t;
         }
 
         /// <summary>
@@ -232,7 +332,7 @@ namespace Notify
         public static async Task SendMsg(long id, string message)
         {
             Console.WriteLine($"Sending to {id} with message: {message}");
-            await BOT.SendTextMessageAsync(id, message);
+            await BOT.SendTextMessageAsync(id, message, ParseMode.Markdown);
         }
     }
 }
