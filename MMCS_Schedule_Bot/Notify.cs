@@ -68,7 +68,6 @@ namespace Notify
                 { (13, 29), "fourth" },
                 { (15, 34), "fifth" },
                 { (17, 29), "sixth" },
-                { (22, 44), "test" },
             };
 
             foreach (var lesson in lessons)
