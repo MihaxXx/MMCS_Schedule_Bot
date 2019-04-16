@@ -28,8 +28,10 @@ namespace Console_Schedule_Bot
                     Info = us.Value.Info,
                     teacherId = us.Value.teacherId,
                     id = us.Value.id,
-                    groupid = us.Value.groupid
-
+                    groupid = us.Value.groupid,
+                    eveningNotify = us.Value.eveningNotify,
+                    preLessonNotify = us.Value.preLessonNotify,
+                    notifiedToday = us.Value.notifiedToday
                 };
                 i++;
             }
@@ -54,13 +56,23 @@ namespace Console_Schedule_Bot
 
                 for (int i = 0; i < json.User.Count; i++)
                 {
+                    if (!json.User[i].ContainsKey("eveningNotify"))
+                        json.User[i].eveningNotify = false;
+                    if (!json.User[i].ContainsKey("preLessonNotify"))
+                        json.User[i].preLessonNotify = false;
+                    if (!json.User[i].ContainsKey("notifiedToday"))
+                        json.User[i].notifiedToday = false;
+                    Console.WriteLine(json.User[i].ContainsKey("notifiedToday"));
                     User x = new User
                     {
                         ident = json.User[i].ident,
                         id = json.User[i].id,
                         teacherId = json.User[i].teacherId,
                         Info = json.User[i].Info,
-                        groupid = json.User[i].groupid
+                        groupid = json.User[i].groupid,
+                        eveningNotify = json.User[i].eveningNotify,
+                        preLessonNotify = json.User[i].preLessonNotify,
+                        notifiedToday = json.User[i].notifiedToday
                     };
                     Program.UserList.Add(x.id, x);
                 }
