@@ -28,21 +28,12 @@ namespace Console_Schedule_Bot
             KeyboardInit();
             TeachersInit();
             GradeInit();
+            GetElectives();
 
-            
-            try
-            {
-                Program.electives = Elective.GetElectives();
-                
-                WriteLine("Список факультативов получен.");
-            }
-            catch (FileNotFoundException ex)
-            {
-                Console.WriteLine("Список факультативов не был загружен!");
-            }
-            electivesStr = electives == null ? "Нет данных о факультативах" : Elective.ElectivesToString(electives);
 
-            BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
+
+
+                BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
             WriteLine("Подключен бот.");
             BOT.OnMessage += BotOnMessageReceived;
 
@@ -108,6 +99,23 @@ namespace Console_Schedule_Bot
                 GradeList[i].Groups = GradeMethods.GetGroupsList(GradeList[i].id);
             }
             WriteLine("Список курсов получен.");
+        }
+
+        /// <summary>
+        /// Gets list of electives
+        /// </summary>
+        static void GetElectives()
+        {
+            try
+            {
+                Program.electives = Elective.GetElectives();
+                WriteLine("Список факультативов получен.");
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine("Список факультативов не был загружен!");
+            }
+            electivesStr = electives == null ? "Нет данных о факультативах" : Elective.ElectivesToString(electives);
         }
 
         /// <summary>
