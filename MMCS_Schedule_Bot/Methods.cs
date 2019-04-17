@@ -32,12 +32,12 @@ namespace API
         public override string ToString()
         {
             return
-                $"*{name}*, \n" +
+                $"*{name}* \n" +
                 $"{(day == "уточняйте" ? "День уточняйте" : $"*{day}*")}, " +
                 $"{(time == "уточняйте" ? "начало уточняйте" : $"*{time}*")} " +
-                $"\t преп. _{teacher}_, " +
-                $"{(!room.HasValue ? "ауд уточняйте" : $"ауд. {room}")} \n\n" +
-                $"{(url != "" ? $"ссылка: {url}" : "")}";
+                $"\n    преп. _{teacher}_, " +
+                $"{(!room.HasValue ? "ауд уточняйте" : $"ауд. {room}")} " +
+                $"{(url != "" ? $"\n ссылка: {url}" : "")} \n\n";
         }
 
         static public IEnumerable<Elective> GetElectives(string fName = "Electives.csv")
