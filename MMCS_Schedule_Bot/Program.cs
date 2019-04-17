@@ -16,6 +16,7 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 
 using API;
+using Notify;
 
 namespace Console_Schedule_Bot
 {
@@ -39,6 +40,7 @@ namespace Console_Schedule_Bot
 
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
             WriteLine("Ожидает сообщений...");
+            Scheduler.RunNotifier().GetAwaiter().GetResult();
             Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
             _closing.WaitOne();
         }
@@ -111,7 +113,7 @@ namespace Console_Schedule_Bot
                 Program.electives = Elective.GetElectives();
                 WriteLine("Список факультативов получен.");
             }
-            catch (FileNotFoundException ex)
+            catch (FileNotFoundException)
             {
                 Console.WriteLine("Список факультативов не был загружен!");
             }
@@ -122,14 +124,14 @@ namespace Console_Schedule_Bot
         /// Reads the bot token from file 'token.key'.
         /// </summary>
         /// <returns>The token.</returns>
-        static string ReadToken()
+        public static string ReadToken()
         {
             string token = string.Empty;
             try
             {
                 token = File.ReadAllText("token.key", Encoding.UTF8);
             }
-            catch(FileNotFoundException e)
+            catch (FileNotFoundException e)
             {
                 WriteLine("File 'token.key' wasn't found in the working directory!\nPlease save Telegram BOT token to file named 'token.key'.");
                 WriteLine(e.Message);
@@ -137,5 +139,5 @@ namespace Console_Schedule_Bot
             }
             return token;
         }
-	}
+    }
 }
