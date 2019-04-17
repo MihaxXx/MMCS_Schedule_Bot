@@ -14,6 +14,11 @@ namespace Console_Schedule_Bot
 
         static private string serialized;
 
+        static public DateTime LastModified()
+        {
+            return File.GetLastWriteTime("Json_Data");
+        }
+
         static public void WriteData()
         {
             Json_Data myCollection = new Json_Data();
@@ -62,7 +67,6 @@ namespace Console_Schedule_Bot
                         json.User[i].preLessonNotify = false;
                     if (!json.User[i].ContainsKey("notifiedToday"))
                         json.User[i].notifiedToday = false;
-                    Console.WriteLine(json.User[i].ContainsKey("notifiedToday"));
                     User x = new User
                     {
                         ident = json.User[i].ident,
