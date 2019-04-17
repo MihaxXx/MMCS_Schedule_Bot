@@ -21,6 +21,8 @@ namespace Console_Schedule_Bot
 {
     partial class Program
     {
+        static IEnumerable<Elective> electives;
+        static string electivesStr;
         static async void BotOnMessageReceived(object sender, MessageEventArgs MessageEventArgs)
         {
             Telegram.Bot.Types.Message msg = MessageEventArgs.Message;
@@ -62,7 +64,7 @@ namespace Console_Schedule_Bot
                         Answer = s;
                     }
                     else
-                        Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
+                     Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
                 }
                 else
                 {
@@ -173,6 +175,10 @@ namespace Console_Schedule_Bot
                         //TODO: Write sth about creators XD
                         Answer = "Меня создали Миша, Дима, Дима, Глеб, Никита, Ира, Максим.";
                         break;
+                    case "/elective":
+                        Answer = electivesStr;
+                        break;
+
 
                     default:
                         Answer = "Введены неверные данные, повторите попытку.";
