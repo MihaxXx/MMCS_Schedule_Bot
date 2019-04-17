@@ -17,11 +17,27 @@ namespace Notify
 {
     public class Scheduler
     {
+        public async static Task RefreshNotifiedToday()
+        {
+            var today = DateTime.Now;
+            var lastModified = Json_Data.LastModified();
+            var diff = today - lastModified;
+            var lastModifiedHour = lastModified.Hour;
+            var diffHours = diff.Hours;
+            Console.WriteLine($"Last modified {diffHours} hours ago");
+            Console.WriteLine($"Last modified at {lastModifiedHour}");
+            if (diffHours > 24 || lastModifiedHour < 3)
+            {
+                await Notifier.ResetNotified();
+                Console.WriteLine("Refreshing notifiedToday field.");
+            }
+        }
         /// <summary>
         /// Runs evening notifier.
         /// </summary>
         public static async Task RunNotifier()
         {
+            await RefreshNotifiedToday();
             // Grab the Scheduler instance from the Factory
             NameValueCollection props = new NameValueCollection
                 {
@@ -176,7 +192,6 @@ public class Notifier
         Console.WriteLine("PreLessonNotifier finished.");
         Json_Data.WriteData();
         return teachersTask;
-
     }
 
     /// <summary>
@@ -238,21 +253,33 @@ public class Notifier
         }
         var nextLessons = NextLessons(groupIDs);
 
+        Week curWeek = CurrentSubject.GetCurrentWeek();
         foreach (var student in students)
         {
             int studentGroupID = student.groupid;
             (Lesson lesson, List<Curriculum> curriculums) = nextLessons[studentGroupID];
+
 
             if (curriculums.Count == 0)
             {
                 Console.WriteLine($"Group {studentGroupID} has no lessons tommorow.");
                 continue;
             }
-            TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
-            int dayOfLesson = timeOfLesson.day;
-            int curDay = Program.GetCurDayOfWeek();
 
-            if (curDay == dayOfLesson)
+            int curDay = Program.GetCurDayOfWeek();
+            // If user enable preLessonNotify after first lesson, we need to send tomorrow
+            var todayLessons = CurrentSubject.GetDaySchedule(studentGroupID, curDay);
+            TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
+            TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
+            if (timeOfLesson != firstLessonTime)
+            {
+                continue;
+            }
+
+            int dayOfLesson = timeOfLesson.day;
+            int minsToLesson = TimeOfLesson.GetMinsToLesson(timeOfLesson, curWeek);
+
+            if (curDay == dayOfLesson && minsToLesson < 20)
             {
                 string msg = BuildMsgForStudent("Ближайшая пара:", lesson, curriculums);
                 targetStudents.Add(student.id, (msg, timeOfLesson));
@@ -277,6 +304,7 @@ public class Notifier
         }
         var nextLessonsForTeachers = NextLessonsForTeachers(teachers);
 
+        Week curWeek = CurrentSubject.GetCurrentWeek();
         foreach (var teacher in teachers)
         {
             int teacherID = teacher.teacherId;
@@ -287,11 +315,20 @@ public class Notifier
                 continue;
             }
 
-            TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
-            int dayOfLesson = timeOfLesson.day;
-            int curDay = Program.GetCurDayOfWeek();
 
-            if (curDay == dayOfLesson)
+            int curDay = Program.GetCurDayOfWeek();
+            // If user enable preLessonNotify after first lesson, we need to send tomorrow
+            var todayLessons = CurrentSubject.GetDayScheduleforTeacher(teacherID, curDay);
+            TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
+            TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
+            if (timeOfLesson != firstLessonTime)
+            {
+                continue;
+            }
+            int dayOfLesson = timeOfLesson.day;
+
+            int minsToLesson = TimeOfLesson.GetMinsToLesson(timeOfLesson, curWeek);
+            if (curDay == dayOfLesson && minsToLesson < 20)
             {
                 string msg = BuildMsgForTeacher("Ближайшая пара: ", lesson, curriculums, techGroups);
                 targetTeachers.Add(teacher.id, (msg, timeOfLesson));
