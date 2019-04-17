@@ -113,7 +113,7 @@ namespace Console_Schedule_Bot
                 Program.electives = Elective.GetElectives();
                 WriteLine("Список факультативов получен.");
             }
-            catch (FileNotFoundException ex)
+            catch (FileNotFoundException)
             {
                 Console.WriteLine("Список факультативов не был загружен!");
             }
