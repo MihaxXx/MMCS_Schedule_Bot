@@ -176,10 +176,12 @@ namespace Console_Schedule_Bot
                         Answer = "Меня создали Миша, Дима, Дима, Глеб, Никита, Ира, Максим.";
                         break;
                     case "/electives":
+                    case "элективы":
                         Answer = electivesStr;
                         break;
-
-
+                    case "/currweek":
+                        Answer = $"Сейчас *{CurrentSubject.GetCurrentWeek().ToString()}* неделя.";
+                        break;
                     default:
                         Answer = "Введены неверные данные, повторите попытку.";
                         break;
@@ -476,6 +478,7 @@ namespace Console_Schedule_Bot
 /eveningNotify — настроить вечернее уведомление
 /preLessonNotify — настроить уведомление за 15 минут первой до пары
 /electives — информация о факультативах
+/currweek — текущая неделя
 /forget — сменить пользователя
 /help — список команд";
 

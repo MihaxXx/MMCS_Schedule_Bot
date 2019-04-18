@@ -183,7 +183,12 @@ namespace API
 		// Текущая неделя 0 - верхняя, 1 - нижняя 
 		[DataMember]
 		public int type { get; set; }
-	}
+
+        public override string ToString()
+        {
+            return type == 0 ? "верхняя" : "нижняя";
+        }
+    }
 
 	/// <summary>
 	/// Класс дисциплины
