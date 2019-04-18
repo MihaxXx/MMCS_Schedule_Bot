@@ -283,7 +283,7 @@ public class Notifier
 
             if (curDay == dayOfLesson && minsToLesson < 20)
             {
-                string msg = BuildMsgForStudent("Ближайшая пара:", lesson, curriculums);
+                string msg = BuildMsgForStudent("Первая пара сегодня:", lesson, curriculums);
                 targetStudents.Add(student.id, (msg, timeOfLesson));
                 Program.UserList[student.id].notifiedToday = true;
             }
@@ -340,7 +340,7 @@ public class Notifier
             int minsToLesson = TimeOfLesson.GetMinsToLesson(timeOfLesson, curWeek);
             if (curDay == dayOfLesson && minsToLesson < 20)
             {
-                string msg = BuildMsgForTeacher("Ближайшая пара: ", lesson, curriculums, techGroups);
+                string msg = BuildMsgForTeacher("Первая пара сегодня: ", lesson, curriculums, techGroups);
                 targetTeachers.Add(teacher.id, (msg, timeOfLesson));
                 Program.UserList[teacher.id].notifiedToday = true;
             }
