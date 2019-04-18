@@ -271,8 +271,10 @@ public class Notifier
             var todayLessons = CurrentSubject.GetDaySchedule(studentGroupID, curDay);
             TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
             TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
-            if (timeOfLesson != firstLessonTime)
+            if (!timeOfLesson.Equals(firstLessonTime))
             {
+                Console.WriteLine($"{student.groupid} first pair already ended.");
+                Console.WriteLine($"first lesson time: {firstLessonTime}, time of lesson: {timeOfLesson}");
                 continue;
             }
 
@@ -284,6 +286,11 @@ public class Notifier
                 string msg = BuildMsgForStudent("Ближайшая пара:", lesson, curriculums);
                 targetStudents.Add(student.id, (msg, timeOfLesson));
                 Program.UserList[student.id].notifiedToday = true;
+            }
+            else
+            {
+                Console.WriteLine($"Minutes to lesson: {minsToLesson}");
+                Console.WriteLine($"Cur day: {curDay}, day of lesson: {dayOfLesson}");
             }
         }
 
@@ -321,10 +328,13 @@ public class Notifier
             var todayLessons = CurrentSubject.GetDayScheduleforTeacher(teacherID, curDay);
             TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
             TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
-            if (timeOfLesson != firstLessonTime)
+            if (!timeOfLesson.Equals(firstLessonTime))
             {
+                Console.WriteLine($"{teacher.teacherId} first pair already ended.");
+                Console.WriteLine($"first lesson time: {firstLessonTime}, time of lesson: {timeOfLesson}");
                 continue;
             }
+
             int dayOfLesson = timeOfLesson.day;
 
             int minsToLesson = TimeOfLesson.GetMinsToLesson(timeOfLesson, curWeek);
