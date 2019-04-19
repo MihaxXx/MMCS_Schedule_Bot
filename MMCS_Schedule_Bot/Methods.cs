@@ -163,6 +163,8 @@ namespace API
             string url = "http://schedule.sfedu.ru/APIv0/time/week/";
             string response = SchRequests.SchRequests.Request(url);
 			Week week = SchRequests.SchRequests.DeSerializationObjFromStr<Week>(response);
+            if (Console_Schedule_Bot.Program.GetCurDayOfWeek() == 6)
+                week.type = week.type == 0 ? 1 : 0;               //Return schedule for next week on Sunday
             return week; 
         }
 		/// <summary>
@@ -252,15 +254,19 @@ namespace API
 		/// <returns></returns>
 		public static List<(Lesson, List<Curriculum>)> GetWeekSchedule(int groupID)
 		{
-			var week = CurrentSubject.GetCurrentWeek();
+			var week = GetCurrentWeek();
 			string url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + groupID;
 			string response = SchRequests.SchRequests.Request(url);
 			var schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfGroup>(response);
 			var res = new List<(Lesson, List<Curriculum>)>();
-			if (schedule.lessons.Count > 0)
-			{
-				foreach (var les in schedule.lessons)
-					res.Add((les, schedule.curricula.FindAll(c => c.lessonid == les.id)));
+            if (schedule.lessons.Count > 0)
+            {
+                foreach (var les in schedule.lessons)
+                {
+                    int lesWeek = TimeOfLesson.Parse(les.timeslot).week;
+                    if (lesWeek == week.type || lesWeek == -1)
+                        res.Add((les, schedule.curricula.FindAll(c => c.lessonid == les.id)));
+                }
 			}
 			res.Sort(CmpLLCByDayAndTime);
 			return res;
@@ -297,15 +303,19 @@ namespace API
 		/// <returns></returns>
 		public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetWeekScheduleforTeacher(int teacherID)
 		{
-			var week = CurrentSubject.GetCurrentWeek();
+			var week = GetCurrentWeek();
 			string url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + teacherID;
 			string response = SchRequests.SchRequests.Request(url);
 			var schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfTeacher>(response);
 			var res = new List<(Lesson, List<Curriculum>, List<TechGroup>)>();
 			if (schedule.lessons.Count > 0)
 			{
-				foreach (var les in schedule.lessons)
-					res.Add((les, schedule.curricula.FindAll(c => c.lessonid == les.id),schedule.groups.FindAll(g => g.uberid == les.uberid)));
+                foreach (var les in schedule.lessons)
+                {
+                    int lesWeek = TimeOfLesson.Parse(les.timeslot).week;
+                    if (lesWeek == week.type || lesWeek == -1)
+                        res.Add((les, schedule.curricula.FindAll(c => c.lessonid == les.id), schedule.groups.FindAll(g => g.uberid == les.uberid)));
+                }
 			}
 			res.Sort(CmpLLCGByDayAndTime);
 			return res;

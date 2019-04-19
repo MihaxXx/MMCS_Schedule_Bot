@@ -34,14 +34,14 @@ namespace Console_Schedule_Bot
 
 
 
-                BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
+            BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
             WriteLine("Подключен бот.");
             BOT.OnMessage += BotOnMessageReceived;
 
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
             WriteLine("Ожидает сообщений...");
             Scheduler.RunNotifier().GetAwaiter().GetResult();
-            Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
+            CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
             _closing.WaitOne();
         }
 
