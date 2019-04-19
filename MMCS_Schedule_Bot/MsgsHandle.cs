@@ -125,16 +125,16 @@ namespace Console_Schedule_Bot
                     case "/today":
                     case "расписание на сегодня":
                         if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
-                            Answer = DaySchToStr(CurrentSubject.GetDaySchedule(UserList[msg.Chat.Id].groupid, GetCurDayOfWeek()));
+                            Answer = DaySchToStr(CurrentSubject.GetTodaySchedule(UserList[msg.Chat.Id].groupid, GetCurDayOfWeek()));
                         else
-                            Answer = DaySchTechToStr(CurrentSubject.GetDayScheduleforTeacher(UserList[msg.Chat.Id].teacherId, GetCurDayOfWeek()));
+                            Answer = DaySchTechToStr(CurrentSubject.GetTodayScheduleforTeacher(UserList[msg.Chat.Id].teacherId, GetCurDayOfWeek()));
                         break;
                     case "/tomorrow":
                     case "расписание на завтра":
                         if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
-                            Answer = DaySchToStr(CurrentSubject.GetDaySchedule(UserList[msg.Chat.Id].groupid, GetNextDayOfWeek()));
+                            Answer = DaySchToStr(CurrentSubject.GetTodaySchedule(UserList[msg.Chat.Id].groupid, GetNextDayOfWeek()));
                         else
-                            Answer = DaySchTechToStr(CurrentSubject.GetDayScheduleforTeacher(UserList[msg.Chat.Id].teacherId, GetNextDayOfWeek()));
+                            Answer = DaySchTechToStr(CurrentSubject.GetTodayScheduleforTeacher(UserList[msg.Chat.Id].teacherId, GetNextDayOfWeek()));
                         break;
                     case "/knowme":
                     case "знаешь меня?":

@@ -252,7 +252,6 @@ namespace API
 		/// <returns></returns>
 		public static List<(Lesson, List<Curriculum>)> GetWeekSchedule(int groupID)
 		{
-			var week = CurrentSubject.GetCurrentWeek();
 			string url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + groupID;
 			string response = SchRequests.SchRequests.Request(url);
 			var schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfGroup>(response);
@@ -274,16 +273,31 @@ namespace API
 		/// <returns></returns>
 		public static List<(Lesson, List<Curriculum>)> GetDaySchedule(int groupID, int day)
 		{
-			return GetWeekSchedule(groupID).FindAll(LLC => TimeOfLesson.Parse(LLC.Item1.timeslot).day == day);
-		}
+            return GetWeekSchedule(groupID).FindAll(LLC => TimeOfLesson.Parse(LLC.Item1.timeslot).day == day);
+        }
 
-		/// <summary>
-		/// Comparison(Lesson, List of Curriculum, List of TechGroup)
-		/// </summary>
-		/// <param name="llc1"></param>
-		/// <param name="llc2"></param>
-		/// <returns></returns>
-		private static int CmpLLCGByDayAndTime((Lesson, List<Curriculum>, List<TechGroup>) llc1, (Lesson, List<Curriculum>, List<TechGroup>) llc2)
+        /// <summary>
+        /// Ordered <paramref name="day"/> schedule with in view of the week
+        /// </summary>
+        /// <param name="groupID"></param>
+        /// <param name="day"></param>
+        /// <returns></returns>
+        public static List<(Lesson, List<Curriculum>)> GetTodaySchedule(int groupID, int day)
+        {
+            var lst = GetDaySchedule(groupID, day);
+            var week = CurrentSubject.GetCurrentWeek();
+            if (Console_Schedule_Bot.Program.GetCurDayOfWeek() == 6)
+                week.type = week.type == 0 ? 1 : 0;               //Return schedule for next week on Sunday
+            return lst.FindAll(x => TimeOfLesson.Parse(x.Item1.timeslot).week == week.type || TimeOfLesson.Parse(x.Item1.timeslot).week == -1);
+        }
+
+        /// <summary>
+        /// Comparison(Lesson, List of Curriculum, List of TechGroup)
+        /// </summary>
+        /// <param name="llc1"></param>
+        /// <param name="llc2"></param>
+        /// <returns></returns>
+        private static int CmpLLCGByDayAndTime((Lesson, List<Curriculum>, List<TechGroup>) llc1, (Lesson, List<Curriculum>, List<TechGroup>) llc2)
 		{
 			var tol1 = TimeOfLesson.Parse(llc1.Item1.timeslot);
 			var tol2 = TimeOfLesson.Parse(llc2.Item1.timeslot);
@@ -297,7 +311,6 @@ namespace API
 		/// <returns></returns>
 		public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetWeekScheduleforTeacher(int teacherID)
 		{
-			var week = CurrentSubject.GetCurrentWeek();
 			string url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + teacherID;
 			string response = SchRequests.SchRequests.Request(url);
 			var schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfTeacher>(response);
@@ -321,7 +334,23 @@ namespace API
 		{
 			return GetWeekScheduleforTeacher(teacherID).FindAll(LLCG => TimeOfLesson.Parse(LLCG.Item1.timeslot).day == day);
 		}
-	}
+
+        /// <summary>
+        /// Ordered <paramref name="day"/> schedule for teacher with in view of the week
+        /// </summary>
+        /// <param name="groupID"></param>
+        /// <param name="day"></param>
+        /// <returns></returns>
+        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetTodayScheduleforTeacher(int teacherID, int day)
+        {
+            var lst = GetDayScheduleforTeacher(teacherID, day);
+            var week = CurrentSubject.GetCurrentWeek();
+            if (Console_Schedule_Bot.Program.GetCurDayOfWeek() == 6)
+                week.type = week.type == 0 ? 1 : 0;               //Return schedule for next week on Sunday
+            return lst.FindAll(x => TimeOfLesson.Parse(x.Item1.timeslot).week == week.type || TimeOfLesson.Parse(x.Item1.timeslot).week == -1);
+        }
+    }
+
 
     public static class TeacherMethods
     {
