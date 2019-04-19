@@ -34,7 +34,7 @@ namespace Console_Schedule_Bot
 
 
 
-            BOT = new Telegram.Bot.TelegramBotClient("697446498:AAFkXTktghiTFGCILZUZ9XiKHZN4LKohXiI");
+            BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
             WriteLine("Подключен бот.");
             BOT.OnMessage += BotOnMessageReceived;
 
