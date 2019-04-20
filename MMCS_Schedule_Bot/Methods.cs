@@ -75,6 +75,10 @@ namespace API
 			return (day + 1) + ". " + starth + ":" + startm + " - " + finishh + ":" + finishm + " " + week + ". н.";
 		}
 
+		public bool Equals(TimeOfLesson other)
+        	{
+        	    return String.Equals(this.ToString(), other.ToString());
+        	}
 		/// <summary>
 		/// Silent convert time units from string to integer
 		/// </summary>
