@@ -268,7 +268,7 @@ public class Notifier
 
             int curDay = CurrentSubject.GetCurDayOfWeek();
             // If user enable preLessonNotify after first lesson, we need to send tomorrow
-            var todayLessons = CurrentSubject.GetDaySchedule(studentGroupID, curDay);
+            var todayLessons = CurrentSubject.GetTodaySchedule(studentGroupID);
             TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
             TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
             if (!timeOfLesson.Equals(firstLessonTime))
@@ -325,7 +325,7 @@ public class Notifier
 
             int curDay = CurrentSubject.GetCurDayOfWeek();
             // If user enable preLessonNotify after first lesson, we need to send tomorrow
-            var todayLessons = CurrentSubject.GetDayScheduleforTeacher(teacherID, curDay);
+            var todayLessons = CurrentSubject.GetTodayScheduleforTeacher(teacherID);
             TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
             TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
             if (!timeOfLesson.Equals(firstLessonTime))
