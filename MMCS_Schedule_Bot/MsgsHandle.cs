@@ -175,11 +175,13 @@ namespace Console_Schedule_Bot
                         //TODO: Write sth about creators XD
                         Answer = "Меня создали Миша, Дима, Дима, Глеб, Никита, Ира, Максим.";
                         break;
-                    case "/elective":
+                    case "/electives":
+                    case "элективы":
                         Answer = electivesStr;
                         break;
-
-
+                    case "/currweek":
+                        Answer = $"Сейчас *{CurrentSubject.GetCurrentWeek().ToString()}* неделя.";
+                        break;
                     default:
                         Answer = "Введены неверные данные, повторите попытку.";
                         break;
@@ -470,8 +472,10 @@ namespace Console_Schedule_Bot
 /findteacher — поиск преподавателя
 /info — краткое описание бота    
 /knowme — показать ваш id
-/eveningNotify - настроить вечернее уведомление
-/preLessonNotify - настроить уведомление за 15 минут первой до пары
+/eveningNotify — настроить вечернее уведомление
+/preLessonNotify — настроить уведомление за 15 минут первой до пары
+/electives — информация о факультативах
+/currweek — текущая неделя
 /forget — сменить пользователя
 /help — список команд";
 

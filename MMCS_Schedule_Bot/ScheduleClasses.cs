@@ -184,8 +184,13 @@ namespace API
 		[DataMember]
 		public int type { get; set; }
 
-        public int reversedtype() => type == 0 ? 1 : 0;
+		public override string ToString()
+		{
+				return type == 0 ? "верхняя" : "нижняя";
+		}
+		public int reversedtype() => type == 0 ? 1 : 0;
 	}
+
 
 	/// <summary>
 	/// Класс дисциплины

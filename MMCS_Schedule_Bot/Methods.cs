@@ -14,8 +14,9 @@ namespace API
         public string day { get; set; }
         public string time { get; set; }
         public int? room { get; set; }
+        public string url { get; set; }
 
-        public Elective(string n, string teach, string d, string t, string r) 
+        public Elective(string n, string teach, string d, string t, string r, string u) 
         {
             name = n;
             teacher = teach;
@@ -25,22 +26,24 @@ namespace API
                 room = tmp;
             else
                 room = null;
-
+            url = u;
         }
 
         public override string ToString()
         {
-            return $"{(day=="уточняйте" ? "День уточняйте" : $"*{day}*" )}, " +
+            return
+                $"*{name}* \n" +
+                $"{(day == "уточняйте" ? "День уточняйте" : $"*{day}*")}, " +
                 $"{(time == "уточняйте" ? "начало уточняйте" : $"*{time}*")} " +
-                $"— *{name}*, \n" +
-                $"\t преп. _{teacher}_, " +
-                $"{(!room.HasValue ? "ауд уточняйте" : $"ауд. {room}")} \n\n";
+                $"\n    преп. _{teacher}_, " +
+                $"{(!room.HasValue ? "ауд уточняйте" : $"ауд. {room}")} " +
+                $"{(url != "" ? $"\n ссылка: {url}" : "")} \n\n";
         }
 
         static public IEnumerable<Elective> GetElectives(string fName = "Electives.csv")
         {
             return File.ReadLines(fName).Select(x=>x.Split(';')).
-                Select(l=>new Elective(l[0], l[1], l[2], l[3], l[4]));
+                Select(l=>new Elective(l[0], l[1], l[2], l[3], l[4], l[5]));
         }
 
         static public string ElectivesToString(IEnumerable<Elective> ie)
