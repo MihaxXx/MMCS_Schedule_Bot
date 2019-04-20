@@ -101,90 +101,98 @@ namespace Console_Schedule_Bot
             }
             else
             {
-                switch (msg.Text.ToLower())             // Обработка команд боту
+                try
                 {
-                    case "/next":
-                    case "ближайшая пара":
-                        if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
-                            Answer = LessonToStr(CurrentSubject.GetCurrentLesson(UserList[msg.Chat.Id].groupid), true);
-                        else
-                            Answer = LessonTechToStr(CurrentSubject.GetCurrentLessonforTeacher(UserList[msg.Chat.Id].teacherId), true);
-                        break;
-                    case "/findteacher":
-                    case "найти преподавателя":
-                        Answer = "Введи фамилию преподавателя";
-                        UserList[msg.Chat.Id].ident = 4;
-                        break;
-                    case "/week":
-                    case "расписание на неделю":
-                        if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
-                            Answer = WeekSchToStr(CurrentSubject.GetWeekSchedule(UserList[msg.Chat.Id].groupid));
-                        else
-                            Answer = WeekSchTechToStr(CurrentSubject.GetWeekScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
-                        break;
-                    case "/today":
-                    case "расписание на сегодня":
-                        if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
-                            Answer = DaySchToStr(CurrentSubject.GetTodaySchedule(UserList[msg.Chat.Id].groupid));
-                        else
-                            Answer = DaySchTechToStr(CurrentSubject.GetTodayScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
-                        break;
-                    case "/tomorrow":
-                    case "расписание на завтра":
-                        if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
-                            Answer = DaySchToStr(CurrentSubject.GetTomorrowSchedule(UserList[msg.Chat.Id].groupid));
-                        else
-                            Answer = DaySchTechToStr(CurrentSubject.GetTomorrowScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
-                        break;
-                    case "/knowme":
-                    case "знаешь меня?":
+                    switch (msg.Text.ToLower())             // Обработка команд боту
+                    {
+                        case "/next":
+                        case "ближайшая пара":
+                            if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
+                                Answer = LessonToStr(CurrentSubject.GetCurrentLesson(UserList[msg.Chat.Id].groupid), true);
+                            else
+                                Answer = LessonTechToStr(CurrentSubject.GetCurrentLessonforTeacher(UserList[msg.Chat.Id].teacherId), true);
+                            break;
+                        case "/findteacher":
+                        case "найти преподавателя":
+                            Answer = "Введи фамилию преподавателя";
+                            UserList[msg.Chat.Id].ident = 4;
+                            break;
+                        case "/week":
+                        case "расписание на неделю":
+                            if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
+                                Answer = WeekSchToStr(CurrentSubject.GetWeekSchedule(UserList[msg.Chat.Id].groupid));
+                            else
+                                Answer = WeekSchTechToStr(CurrentSubject.GetWeekScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
+                            break;
+                        case "/today":
+                        case "расписание на сегодня":
+                            if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
+                                Answer = DaySchToStr(CurrentSubject.GetTodaySchedule(UserList[msg.Chat.Id].groupid));
+                            else
+                                Answer = DaySchTechToStr(CurrentSubject.GetTodayScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
+                            break;
+                        case "/tomorrow":
+                        case "расписание на завтра":
+                            if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
+                                Answer = DaySchToStr(CurrentSubject.GetTomorrowSchedule(UserList[msg.Chat.Id].groupid));
+                            else
+                                Answer = DaySchTechToStr(CurrentSubject.GetTomorrowScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
+                            break;
+                        case "/knowme":
+                        case "знаешь меня?":
 
-                        if (UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
-                            Answer = $"Да, вы {TeacherList[UserList[msg.Chat.Id].teacherId].name}, Id = {TeacherList[UserList[msg.Chat.Id].teacherId].id}";     //TODO: Убрать вывод ID; База старая, так что выводим только ФИО!!!
-                        else
-                            Answer = "Да, ты " + UserList[msg.Chat.Id].id.ToString();
-                        break;
+                            if (UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
+                                Answer = $"Да, вы {TeacherList[UserList[msg.Chat.Id].teacherId].name}, Id = {TeacherList[UserList[msg.Chat.Id].teacherId].id}";     //TODO: Убрать вывод ID; База старая, так что выводим только ФИО!!!
+                            else
+                                Answer = "Да, ты " + UserList[msg.Chat.Id].id.ToString();
+                            break;
 
-                    case "/eveningnotify":
-                        Answer = $"Настрой вечернее уведомление о завтрашней первой паре.";
-                        UserList[msg.Chat.Id].ident = 5;
-                        await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: notifierKeyboard);
-                        return;
+                        case "/eveningnotify":
+                            Answer = $"Настрой вечернее уведомление о завтрашней первой паре.";
+                            UserList[msg.Chat.Id].ident = 5;
+                            await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: notifierKeyboard);
+                            return;
 
-                    case "/prelessonnotify":
-                        Answer = $"Настрой уведомление за 15 минут до первой пары.";
-                        UserList[msg.Chat.Id].ident = 6;
-                        await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: notifierKeyboard);
-                        return;
+                        case "/prelessonnotify":
+                            Answer = $"Настрой уведомление за 15 минут до первой пары.";
+                            UserList[msg.Chat.Id].ident = 6;
+                            await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: notifierKeyboard);
+                            return;
 
 
-                    case "/forget":
-                    case "забудь меня":
-                        UserList[msg.Chat.Id].ident = 0;
-                        Json_Data.WriteData();
-                        Answer = "Я тебя забыл! Для повторной регистрации пиши /start";
-                        await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
-                        return;
+                        case "/forget":
+                        case "забудь меня":
+                            UserList[msg.Chat.Id].ident = 0;
+                            Json_Data.WriteData();
+                            Answer = "Я тебя забыл! Для повторной регистрации пиши /start";
+                            await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
+                            return;
 
-                    case "помощь":
-                    case "/help":
-                        Answer = _help;
-                        break;
-                    case "/info":
-                    case "информация":
-                        //TODO: Write sth about creators XD
-                        Answer = "Меня создали Миша, Дима, Дима, Глеб, Никита, Ира, Максим.";
-                        break;
-                    case "/electives":
-                    case "элективы":
-                        Answer = electivesStr;
-                        break;
-                    case "/currweek":
-                        Answer = $"Сейчас *{CurrentSubject.GetCurrentWeek().ToString()}* неделя.";
-                        break;
-                    default:
-                        Answer = "Введены неверные данные, повторите попытку.";
-                        break;
+                        case "помощь":
+                        case "/help":
+                            Answer = _help;
+                            break;
+                        case "/info":
+                        case "информация":
+                            //TODO: Write sth about creators XD
+                            Answer = "Меня создали Миша, Дима, Дима, Глеб, Никита, Ира, Максим.";
+                            break;
+                        case "/electives":
+                        case "элективы":
+                            Answer = electivesStr;
+                            break;
+                        case "/currweek":
+                            Answer = $"Сейчас *{CurrentSubject.GetCurrentWeek().ToString()}* неделя.";
+                            break;
+                        default:
+                            Answer = "Введены неверные данные, повторите попытку.";
+                            break;
+                    }
+                }
+                catch (System.Net.WebException e)
+                {
+                    WriteLine("Catched exeption:\n" + e.Message);
+                    Answer = "Ошибка! Вероятно, сервер интерактивного расписания недоступен. Пожалуйста, попробуйте повторить запрос позднее.";
                 }
             }
             if (IsRegistered(msg.Chat.Id))

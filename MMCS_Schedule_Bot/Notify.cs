@@ -419,7 +419,7 @@ public class Notifier
 
             TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
             int dayOfLesson = timeOfLesson.day;
-            int nextDay = Program.GetNextDayOfWeek();
+            int nextDay = CurrentSubject.GetNextDayOfWeek();
 
             if (nextDay == dayOfLesson)
             {
@@ -457,7 +457,7 @@ public class Notifier
             }
             TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
             int dayOfLesson = timeOfLesson.day;
-            int nextDay = Program.GetNextDayOfWeek();
+            int nextDay = CurrentSubject.GetNextDayOfWeek();
 
             if (nextDay == dayOfLesson)
             {
