@@ -183,6 +183,8 @@ namespace API
 		// Текущая неделя 0 - верхняя, 1 - нижняя 
 		[DataMember]
 		public int type { get; set; }
+
+        public int reversedtype() => type == 0 ? 1 : 0;
 	}
 
 	/// <summary>

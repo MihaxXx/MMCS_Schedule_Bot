@@ -153,11 +153,14 @@ namespace API
 	}
 
     public static class CurrentSubject
-	{ 
-		/// <summary>
-		/// Request current week
-		/// </summary>
-		/// <returns></returns>
+	{
+        public static int GetCurDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 6) % 7;
+        public static int GetNextDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 7) % 7;
+
+        /// <summary>
+        /// Request current week
+        /// </summary>
+        /// <returns></returns>
         public static Week GetCurrentWeek()
         {
             string url = "http://schedule.sfedu.ru/APIv0/time/week/";
@@ -252,7 +255,6 @@ namespace API
 		/// <returns></returns>
 		public static List<(Lesson, List<Curriculum>)> GetWeekSchedule(int groupID)
 		{
-			var week = CurrentSubject.GetCurrentWeek();
 			string url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + groupID;
 			string response = SchRequests.SchRequests.Request(url);
 			var schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfGroup>(response);
@@ -277,13 +279,26 @@ namespace API
 			return GetWeekSchedule(groupID).FindAll(LLC => TimeOfLesson.Parse(LLC.Item1.timeslot).day == day);
 		}
 
-		/// <summary>
-		/// Comparison(Lesson, List of Curriculum, List of TechGroup)
-		/// </summary>
-		/// <param name="llc1"></param>
-		/// <param name="llc2"></param>
-		/// <returns></returns>
-		private static int CmpLLCGByDayAndTime((Lesson, List<Curriculum>, List<TechGroup>) llc1, (Lesson, List<Curriculum>, List<TechGroup>) llc2)
+        public static List<(Lesson, List<Curriculum>)> GetTodaySchedule(int groupID)
+        {
+            var day = GetCurDayOfWeek();
+            var week = GetCurrentWeek().type;
+            return GetWeekSchedule(groupID).FindAll(LLC => { var tol = TimeOfLesson.Parse(LLC.Item1.timeslot); return tol.day == day && (tol.week == -1 || tol.week == week); } );
+        }
+        public static List<(Lesson, List<Curriculum>)> GetTomorrowSchedule(int groupID)
+        {
+            var day = GetNextDayOfWeek();
+            var week = day != 0 ? GetCurrentWeek().type : GetCurrentWeek().reversedtype();
+            return GetWeekSchedule(groupID).FindAll(LLC => { var tol = TimeOfLesson.Parse(LLC.Item1.timeslot); return tol.day == day && (tol.week == -1 || tol.week == week); });
+        }
+
+        /// <summary>
+        /// Comparison(Lesson, List of Curriculum, List of TechGroup)
+        /// </summary>
+        /// <param name="llc1"></param>
+        /// <param name="llc2"></param>
+        /// <returns></returns>
+        private static int CmpLLCGByDayAndTime((Lesson, List<Curriculum>, List<TechGroup>) llc1, (Lesson, List<Curriculum>, List<TechGroup>) llc2)
 		{
 			var tol1 = TimeOfLesson.Parse(llc1.Item1.timeslot);
 			var tol2 = TimeOfLesson.Parse(llc2.Item1.timeslot);
@@ -297,7 +312,6 @@ namespace API
 		/// <returns></returns>
 		public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetWeekScheduleforTeacher(int teacherID)
 		{
-			var week = CurrentSubject.GetCurrentWeek();
 			string url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + teacherID;
 			string response = SchRequests.SchRequests.Request(url);
 			var schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfTeacher>(response);
@@ -321,7 +335,21 @@ namespace API
 		{
 			return GetWeekScheduleforTeacher(teacherID).FindAll(LLCG => TimeOfLesson.Parse(LLCG.Item1.timeslot).day == day);
 		}
-	}
+
+        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetTodayScheduleforTeacher(int teacherID)
+        {
+            var day = GetCurDayOfWeek();
+            var week = GetCurrentWeek().type;
+            return GetWeekScheduleforTeacher(teacherID).FindAll(LLCG => { var tol = TimeOfLesson.Parse(LLCG.Item1.timeslot); return tol.day == day && (tol.week == -1 || tol.week == week); });
+        }
+
+        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetTomorrowScheduleforTeacher(int teacherID)
+        {
+            var day = GetNextDayOfWeek();
+            var week = day != 0 ? GetCurrentWeek().type : GetCurrentWeek().reversedtype();
+            return GetWeekScheduleforTeacher(teacherID).FindAll(LLCG => { var tol = TimeOfLesson.Parse(LLCG.Item1.timeslot); return tol.day == day && (tol.week == -1 || tol.week == week); });
+        }
+    }
 
     public static class TeacherMethods
     {

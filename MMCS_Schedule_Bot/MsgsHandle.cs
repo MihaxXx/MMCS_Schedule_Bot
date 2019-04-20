@@ -125,16 +125,16 @@ namespace Console_Schedule_Bot
                     case "/today":
                     case "расписание на сегодня":
                         if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
-                            Answer = DaySchToStr(CurrentSubject.GetDaySchedule(UserList[msg.Chat.Id].groupid, GetCurDayOfWeek()));
+                            Answer = DaySchToStr(CurrentSubject.GetTodaySchedule(UserList[msg.Chat.Id].groupid));
                         else
-                            Answer = DaySchTechToStr(CurrentSubject.GetDayScheduleforTeacher(UserList[msg.Chat.Id].teacherId, GetCurDayOfWeek()));
+                            Answer = DaySchTechToStr(CurrentSubject.GetTodayScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
                         break;
                     case "/tomorrow":
                     case "расписание на завтра":
                         if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
-                            Answer = DaySchToStr(CurrentSubject.GetDaySchedule(UserList[msg.Chat.Id].groupid, GetNextDayOfWeek()));
+                            Answer = DaySchToStr(CurrentSubject.GetTomorrowSchedule(UserList[msg.Chat.Id].groupid));
                         else
-                            Answer = DaySchTechToStr(CurrentSubject.GetDayScheduleforTeacher(UserList[msg.Chat.Id].teacherId, GetNextDayOfWeek()));
+                            Answer = DaySchTechToStr(CurrentSubject.GetTomorrowScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
                         break;
                     case "/knowme":
                     case "знаешь меня?":
@@ -461,9 +461,6 @@ namespace Console_Schedule_Bot
         /// </summary>
         public enum DayOfWeek { Понедельник = 0, Вторник, Среда, Четверг, Пятница, Суббота, Воскресенье };
         public enum DayOfW { ПН = 0, ВТ, СР, ЧТ, ПТ, СБ, ВС };
-
-        public static int GetCurDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 6) % 7;
-        public static int GetNextDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 7) % 7;
 
         private static readonly string _help = @"Список команд: 
 /next — какая ближайшая пара

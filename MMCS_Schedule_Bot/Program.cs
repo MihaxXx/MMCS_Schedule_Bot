@@ -31,10 +31,7 @@ namespace Console_Schedule_Bot
             GradeInit();
             GetElectives();
 
-
-
-
-                BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
+            BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
             WriteLine("Подключен бот.");
             BOT.OnMessage += BotOnMessageReceived;
 
