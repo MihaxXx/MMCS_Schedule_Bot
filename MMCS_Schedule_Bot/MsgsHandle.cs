@@ -99,6 +99,17 @@ namespace Console_Schedule_Bot
                 string onOrOffMsg = onOrOff ? "включено" : "выключено";
                 Answer = $"Уведомление за 15 минут до первой пары *{onOrOffMsg}*.";
             }
+            else if (UserList[msg.Chat.Id].ident == 7)
+            { 
+                if (IsCourseGroup(msg.Text)) 
+                {
+                    int friendgroupid = int.Parse(msg.Text.Split('.').Join(""));
+                    Answer = LessonToStr(CurrentSubject.GetCurrentLesson(friendgroupid)); 
+                    UserList[msg.Chat.Id].ident = 3; 
+                }
+                else 
+                    Answer = "Введена неверная группа"; 
+            }
             else
             {
                 try
@@ -117,6 +128,11 @@ namespace Console_Schedule_Bot
                             Answer = "Введи фамилию преподавателя";
                             UserList[msg.Chat.Id].ident = 4;
                             break;
+                        case "/findfriend": 
+                        case "найти друга": 
+                            Answer = "Введи группу друга как х.х"; 
+                            UserList[msg.Chat.Id].ident = 7; 
+                            break; 
                         case "/week":
                         case "расписание на неделю":
                             if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
@@ -285,6 +301,34 @@ namespace Console_Schedule_Bot
                         break;
                 }
                 UserList[id].groupid = groupid;
+                return true;
+            }
+            catch (Exception e)
+            {
+                WriteLine("Ошибка: " + e.Message);
+                return false;
+            }
+        }
+
+
+        static bool IsCourseGroup(string s)
+        {
+            try
+            {
+                var lst = s.Split('.').ToArray();
+                if (lst[0] == String.Empty || lst[1] == String.Empty || lst.Length > 2 || lst.Length < 1)
+                {
+                    WriteLine("Ошибка ввода!");
+                    return false;
+                }
+                var (course, group) = (-1, -1);
+                bool IsCourse = int.TryParse(lst[0], out course);
+                bool IsGroup = int.TryParse(lst[1], out group);
+                if (!IsCourse || !IsGroup)
+                {
+                    WriteLine("Ошибка парсинга!");
+                    return false;
+                }
                 return true;
             }
             catch (Exception e)
@@ -477,7 +521,8 @@ namespace Console_Schedule_Bot
 /today — расписание на сегодня
 /tomorrow — список пар на завтра
 /week — расписание на неделю
-/findteacher — поиск преподавателя
+/findteacher — поиск преподавателя 
+/findfriend — поиск друга
 /info — краткое описание бота    
 /knowme — показать ваш id
 /eveningNotify — настроить вечернее уведомление
