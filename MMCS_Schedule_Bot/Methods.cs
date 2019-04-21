@@ -123,7 +123,7 @@ namespace API
 			int res = 0;
 			int CurWeek = week.type;
 			var CurTime = System.DateTime.Now;
-			int CurDay = (int)CurTime.DayOfWeek - 1;
+			int CurDay = (((int)CurTime.DayOfWeek) + 6) % 7;
 			int days = 0;
 
 			if (ToL.day < CurDay || (ToL.day == CurDay && ToL.starth < CurTime.Hour) || (ToL.day == CurDay && ToL.starth == CurTime.Hour && ToL.startm < CurTime.Minute))//lesson is on the next week
