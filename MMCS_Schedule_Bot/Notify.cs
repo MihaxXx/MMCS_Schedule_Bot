@@ -126,7 +126,6 @@ namespace Notify
             logger.Info($"preLessonNotifiers setting...");
             foreach (var lesson in lessons)
             {
-                logger.Info($"{lesson.Value}");
                 IJobDetail preLessonNotify = JobBuilder.Create<PreLessonNotify>()
                   .WithIdentity($"{lesson.Value}_preLessonNotify")
                   .Build();
