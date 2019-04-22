@@ -61,6 +61,8 @@ namespace API
     /// </summary>
     public class TimeOfLesson
     {
+	
+	    public static Week curWeek { get; set; }
 		//0..6 = пн..вс
         public int day { get; set; }
         public int starth { get; set; }
