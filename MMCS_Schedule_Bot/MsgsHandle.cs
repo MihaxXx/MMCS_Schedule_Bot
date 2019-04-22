@@ -359,6 +359,8 @@ namespace Console_Schedule_Bot
         {
             try
             {
+                if (!s.Contains('.'))
+                    return false; 
                 var lst = s.Split('.').ToArray();
                 if (lst[0] == String.Empty || lst[1] == String.Empty || lst.Length > 2 || lst.Length < 1)
                 {
