@@ -64,7 +64,7 @@ namespace Console_Schedule_Bot
                         Answer = s;
                     }
                     else
-                     Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
+                        Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
                 }
                 else
                 {
@@ -101,19 +101,19 @@ namespace Console_Schedule_Bot
             }
             else if (UserList[msg.Chat.Id].ident == 7)
             {
-                FlagInFindFriend[msg.Chat.Id] = -1; 
+                FlagInFindFriend[msg.Chat.Id] = -1;
                 switch (msg.Text)
                 {
                     case "бакалавр":
-                        FlagInFindFriend[msg.Chat.Id] = 1; 
+                        FlagInFindFriend[msg.Chat.Id] = 1;
                         Answer = "Необходимо ввести курс и группу бакалавриата в виде х.х";
                         break;
                     case "магистр":
-                        FlagInFindFriend[msg.Chat.Id] = 2; 
+                        FlagInFindFriend[msg.Chat.Id] = 2;
                         Answer = "Необходимо ввести курс и группу магистратуры в виде х.х";
                         break;
                     case "аспирант":
-                        FlagInFindFriend[msg.Chat.Id] = 3; 
+                        FlagInFindFriend[msg.Chat.Id] = 3;
                         Answer = "Необходимо ввести курс и группу аспирантуры в виде х.х";
                         break;
                     case "преподаватель":
@@ -145,7 +145,7 @@ namespace Console_Schedule_Bot
                             else
                             {
                                 Answer = LessonToStr(CurrentSubject.GetCurrentLesson(id));
-                                FlagInFindFriend[msg.Chat.Id] = -1; 
+                                FlagInFindFriend[msg.Chat.Id] = -1;
                                 UserList[msg.Chat.Id].ident = 3;
                             }
                         }
@@ -172,11 +172,11 @@ namespace Console_Schedule_Bot
                             Answer = "Введи фамилию преподавателя";
                             UserList[msg.Chat.Id].ident = 4;
                             break;
-                        case "/findfriend": 
-                        case "найти друга": 
-                            Answer = "Он бакалавр, магистр или аспирант?"; 
-                            UserList[msg.Chat.Id].ident = 7; 
-                            break; 
+                        case "/findfriend":
+                        case "найти друга":
+                            Answer = "Он бакалавр, магистр или аспирант?";
+                            UserList[msg.Chat.Id].ident = 7;
+                            break;
                         case "/week":
                         case "расписание на неделю":
                             if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
@@ -360,7 +360,7 @@ namespace Console_Schedule_Bot
             try
             {
                 if (!s.Contains('.'))
-                    return false; 
+                    return false;
                 var lst = s.Split('.').ToArray();
                 if (lst[0] == String.Empty || lst[1] == String.Empty || lst.Length > 2 || lst.Length < 1)
                 {

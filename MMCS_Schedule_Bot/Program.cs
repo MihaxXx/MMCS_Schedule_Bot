@@ -20,7 +20,7 @@ using Notify;
 
 namespace Console_Schedule_Bot
 {
-   
+
     partial class Program
     {
         static void Main(string[] args)
@@ -45,7 +45,7 @@ namespace Console_Schedule_Bot
         /// <summary>
         /// Used in finding friend in ident = 7
         /// </summary>
-        static private Dictionary<long, int> FlagInFindFriend = new Dictionary<long, int>(); 
+        static private Dictionary<long, int> FlagInFindFriend = new Dictionary<long, int>();
 
         /// <summary>
         /// Used for teacher registration and finding teacher
