@@ -103,9 +103,17 @@ namespace Console_Schedule_Bot
             { 
                 if (IsCourseGroup(msg.Text)) 
                 {
-                    int friendgroupid = int.Parse(msg.Text.Split('.').Join(""));
-                    Answer = LessonToStr(CurrentSubject.GetCurrentLesson(friendgroupid)); 
-                    UserList[msg.Chat.Id].ident = 3; 
+                    string[] id = msg.Text.Split('.'); 
+                    int course = int.Parse(id[0]);
+                    int group = int.Parse(id[1]); 
+                    int friendgroupid = CurrentSubject.CourseGroupToID(course, group);
+                    if (friendgroupid == -1)
+                        Answer = "Введена неверная группа";
+                    else
+                    {
+                        Answer = LessonToStr(CurrentSubject.GetCurrentLesson(friendgroupid));
+                        UserList[msg.Chat.Id].ident = 3;
+                    }
                 }
                 else 
                     Answer = "Введена неверная группа"; 
