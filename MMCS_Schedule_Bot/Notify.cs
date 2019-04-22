@@ -11,26 +11,48 @@ using API;
 using Console_Schedule_Bot;
 using Quartz;
 using Quartz.Impl;
+using NLog;
+using NLog.Config;
 
 
 namespace Notify
 {
     public class Scheduler
     {
+        static public Logger logger = LogManager.GetCurrentClassLogger();
+
         public async static Task RefreshNotifiedToday()
         {
             var today = DateTime.Now;
             var lastModified = Json_Data.LastModified();
             var diff = today - lastModified;
             var lastModifiedHour = lastModified.Hour;
-            var diffHours = diff.Hours;
-            Console.WriteLine($"Last modified {diffHours} hours ago");
-            Console.WriteLine($"Last modified at {lastModifiedHour}");
-            if (diffHours > 24 || lastModifiedHour < 3)
+            var diffDays = diff.Days;
+            logger.Info($"Last modified {diffDays} days ago");
+            logger.Info($"Last modified at {lastModifiedHour}");
+            if (diffDays > 0 || lastModifiedHour < 3)
             {
                 await Notifier.ResetNotified();
-                Console.WriteLine("Refreshing notifiedToday field.");
+                logger.Info("Refreshing notifiedToday field.");
             }
+        }
+
+        /// <summary>
+        /// Resets the type of the week.
+        /// </summary>
+        public static Task ResetWeekType()
+        {
+
+            var task = Task.Factory.StartNew(() =>
+            {
+                logger.Info("Updating curWeek...");
+                logger.Info($"Cur week setting: {TimeOfLesson.curWeek}");
+                Week curWeek = CurrentSubject.GetCurrentWeek();
+                TimeOfLesson.curWeek = curWeek;
+                logger.Info($"Cur week after setting: {TimeOfLesson.curWeek}");
+            });
+            return task;
+
         }
         /// <summary>
         /// Runs evening notifier.
@@ -38,6 +60,8 @@ namespace Notify
         public static async Task RunNotifier()
         {
             await RefreshNotifiedToday();
+            await ResetWeekType();
+
             // Grab the Scheduler instance from the Factory
             NameValueCollection props = new NameValueCollection
                 {
@@ -75,6 +99,18 @@ namespace Notify
 
             await scheduler.ScheduleJob(resetNotified, resetNotifiedTrigger);
 
+            // Reset week type
+            IJobDetail resetWeekType = JobBuilder.Create<ResetWeekType>()
+                .WithIdentity("resetWeekType")
+                .Build();
+
+            ITrigger resetWeekTypeTrigger = TriggerBuilder.Create()
+                .WithIdentity("resetWeekType")
+                .WithCronSchedule($"0 30 0 ? * MON *")
+                .ForJob(resetWeekType)
+                .Build();
+
+            await scheduler.ScheduleJob(resetWeekType, resetWeekTypeTrigger);
 
             var lessons = new Dictionary<(int, int), string>
             {
@@ -84,11 +120,13 @@ namespace Notify
                 { (13, 29), "fourth" },
                 { (15, 34), "fifth" },
                 { (17, 29), "sixth" },
+                //{ (DateTime.Now.Hour, DateTime.Now.Minute + 1), "test" },
             };
 
+            logger.Info($"preLessonNotifiers setting...");
             foreach (var lesson in lessons)
             {
-                Console.WriteLine($"{lesson.Value}_preLessonNotify setting...");
+                logger.Info($"{lesson.Value}");
                 IJobDetail preLessonNotify = JobBuilder.Create<PreLessonNotify>()
                   .WithIdentity($"{lesson.Value}_preLessonNotify")
                   .Build();
@@ -100,11 +138,12 @@ namespace Notify
                     .Build();
 
                 await scheduler.ScheduleJob(preLessonNotify, preLessonTrigger);
-                Console.WriteLine($"{lesson.Value}_preLessonNotify setted.");
             }
+            logger.Info("Done.");
 
         }
     }
+
 
     /// <summary>
     /// Evening notify task.
@@ -118,6 +157,22 @@ namespace Notify
         public async Task Execute(IJobExecutionContext context)
         {
             await Notifier.ResetNotified();
+        }
+    }
+
+    /// <summary>
+    /// Reset week type.
+    /// </summary>
+    public class ResetWeekType : IJob
+    {
+        /// <summary>
+        /// Execute the specified context.
+        /// </summary>
+        /// <returns>The execute.</returns>
+        /// <param name="context">Context.</param>
+        public async Task Execute(IJobExecutionContext context)
+        {
+            await Scheduler.ResetWeekType();
         }
     }
 
@@ -154,10 +209,13 @@ namespace Notify
 /// </summary>
 public class Notifier
 {
+    static public Logger logger = LogManager.GetCurrentClassLogger();
     /// <summary>
     /// Telegram bot.
     /// </summary>
     static Telegram.Bot.TelegramBotClient BOT;
+
+
 
     /// <summary>
     /// Evenings the notify.
@@ -168,11 +226,12 @@ public class Notifier
         BOT = new Telegram.Bot.TelegramBotClient(TOKEN);
         (List<User> students, List<User> teachers) = SplitUsers(Program.UserList);
         Console.WriteLine("Notifier running...");
+        logger.Info("Notifier running...");
         var targetStudentsInfo = FilterStudents(students);
         var targetTeachersInfo = FilterTeachers(teachers);
         Task studentsTask = RunTasks(targetStudentsInfo);
         Task teachersTask = RunTasks(targetTeachersInfo);
-        Console.WriteLine("Notifier finished.");
+        logger.Info("Notifier finished.");
         return teachersTask;
     }
 
@@ -183,30 +242,46 @@ public class Notifier
     {
         string TOKEN = Program.ReadToken();
         BOT = new Telegram.Bot.TelegramBotClient(TOKEN);
+
+        Console.WriteLine("Notifier running...");
         (List<User> students, List<User> teachers) = SplitUsersPreLesson(Program.UserList);
-        Console.WriteLine("PreLessonNotifier running...");
+        logger.Info("PreLessonNotifier running...");
+        logger.Info($"Students cnt: {students.Count}");
+        logger.Info($"Teachers cnt: {teachers.Count}");
+        logger.Info($"Total users: {students.Count + teachers.Count}");
         var targetStudentsInfo = FilterStudentsPreLesson(students);
+        logger.Info($"Target students cnt: {students.Count}");
+        foreach (var target_student in targetStudentsInfo)
+        {
+            logger.Info($"Target teacher: {target_student}");
+        }
         var targetTeachersInfo = FilterTeachersPreLesson(teachers);
+        logger.Info($"Target teachers cnt: {teachers.Count}");
+        foreach (var target_teacher in targetTeachersInfo)
+        {
+            logger.Info($"Target teacher: {target_teacher}");
+        }
         Task studentsTask = RunTasks(targetStudentsInfo);
         Task teachersTask = RunTasks(targetTeachersInfo);
-        Console.WriteLine("PreLessonNotifier finished.");
+        logger.Info("PreLessonNotifier finished.");
         Json_Data.WriteData();
         return teachersTask;
     }
+
 
     /// <summary>
     /// Resets the todayNotified field for all users.
     /// </summary>
     public static Task ResetNotified()
     {
-        Console.WriteLine("Reset notified running...");
+        logger.Info("Reset notified running...");
         var task = Task.Factory.StartNew(() =>
         {
             foreach (var user in Program.UserList)
             {
                 user.Value.notifiedToday = false;
             }
-            Console.WriteLine("Reset notified finished.");
+            logger.Info("Reset notified finished.");
             Json_Data.WriteData();
         });
 
@@ -226,12 +301,18 @@ public class Notifier
             if (user.Value.Info == User.UserInfo.teacher)
             {
                 if (user.Value.preLessonNotify && !user.Value.notifiedToday)
+                {
+                    logger.Info($"User {user.Value.id} is a teeacher and subscribed on preLesson.");
                     teachers.Add(user.Value);
+                }
             }
             else
             {
                 if (user.Value.preLessonNotify && !user.Value.notifiedToday)
+                {
                     students.Add(user.Value);
+                    logger.Info($"User {user.Value.id} is a {user.Value.Info} and subscribed.");
+                }
             }
         }
 
@@ -249,6 +330,7 @@ public class Notifier
         var targetStudents = new Dictionary<long, (string, TimeOfLesson)>();
         if (!groupIDs.Any())
         {
+            logger.Info($"Not students subscribed now.");
             return targetStudents;
         }
         var nextLessons = NextLessons(groupIDs);
@@ -259,41 +341,58 @@ public class Notifier
             int studentGroupID = student.groupid;
             (Lesson lesson, List<Curriculum> curriculums) = nextLessons[studentGroupID];
 
-
             if (curriculums.Count == 0)
             {
-                Console.WriteLine($"Group {studentGroupID} has no lessons tommorow.");
+                logger.Info($"Group {studentGroupID} has no lessons tommorow.");
                 continue;
             }
 
             int curDay = CurrentSubject.GetCurDayOfWeek();
             // If user enable preLessonNotify after first lesson, we need to send tomorrow
             var todayLessons = CurrentSubject.GetTodaySchedule(studentGroupID);
+            foreach (var todayLesson in todayLessons)
+            {
+                logger.Info(todayLesson);
+            }
+
             TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
+            logger.Info($"first lesson time: {firstLessonTime}");
             TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
+            logger.Info($"time of cur lesson: {timeOfLesson}");
             if (!timeOfLesson.Equals(firstLessonTime))
             {
-                Console.WriteLine($"{student.groupid} first pair already ended.");
-                Console.WriteLine($"first lesson time: {firstLessonTime}, time of lesson: {timeOfLesson}");
+                logger.Info($"{student.groupid} first pair already ended.");
+                logger.Info($"first lesson time: {firstLessonTime}, time of lesson: {timeOfLesson}");
                 continue;
+            }
+            else
+            {
+                logger.Info($"Times are equal.");
             }
 
             int dayOfLesson = timeOfLesson.day;
+            logger.Info($"Day of lesson: {dayOfLesson}");
             int minsToLesson = TimeOfLesson.GetMinsToLesson(timeOfLesson, curWeek);
+            logger.Info($"Mins to lesson: {minsToLesson}");
 
             if (curDay == dayOfLesson && minsToLesson < 20)
             {
+                logger.Info($"Student with id:{student.id} and teacherID: {student.teacherId} will be notified.");
                 string msg = BuildMsgForStudent("Первая пара сегодня:", lesson, curriculums);
                 targetStudents.Add(student.id, (msg, timeOfLesson));
                 Program.UserList[student.id].notifiedToday = true;
             }
             else
             {
-                Console.WriteLine($"Minutes to lesson: {minsToLesson}");
-                Console.WriteLine($"Cur day: {curDay}, day of lesson: {dayOfLesson}");
+                logger.Info($"Minutes to lesson: {minsToLesson}");
+                logger.Info($"Cur day: {curDay}, day of lesson: {dayOfLesson}");
             }
         }
 
+        foreach (var user in targetStudents)
+        {
+            logger.Info($"target student: {user}");
+        }
         return targetStudents;
     }
 
@@ -318,7 +417,7 @@ public class Notifier
             (Lesson lesson, List<Curriculum> curriculums, List<TechGroup> techGroups) = nextLessonsForTeachers[teacherID];
             if (curriculums.Count == 0)
             {
-                Console.WriteLine($"Teacher {teacherID} has no lessons today.");
+                logger.Info($"Teacher {teacherID} has no lessons today.");
                 continue;
             }
 
@@ -326,26 +425,49 @@ public class Notifier
             int curDay = CurrentSubject.GetCurDayOfWeek();
             // If user enable preLessonNotify after first lesson, we need to send tomorrow
             var todayLessons = CurrentSubject.GetTodayScheduleforTeacher(teacherID);
+            foreach (var todayLesson in todayLessons)
+            {
+                logger.Info($"today lesson: {todayLesson}");
+            }
+
             TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
+
+            logger.Info($"first lesson time: {firstLessonTime}");
             TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
+            logger.Info($"time of lesson: {timeOfLesson}");
             if (!timeOfLesson.Equals(firstLessonTime))
             {
-                Console.WriteLine($"{teacher.teacherId} first pair already ended.");
-                Console.WriteLine($"first lesson time: {firstLessonTime}, time of lesson: {timeOfLesson}");
+                logger.Info($"{teacher.teacherId} first pair already ended.");
+                logger.Info($"first lesson time: {firstLessonTime}, time of lesson: {timeOfLesson}");
                 continue;
+            }
+            else
+            {
+                logger.Info($"Times are equal.");
             }
 
             int dayOfLesson = timeOfLesson.day;
-
+            logger.Info($"Day of lesson: {dayOfLesson}");
             int minsToLesson = TimeOfLesson.GetMinsToLesson(timeOfLesson, curWeek);
+            logger.Info($"Mins to lesson: {minsToLesson}");
             if (curDay == dayOfLesson && minsToLesson < 20)
             {
+                logger.Info($"Teacher with id:{teacher.id} and teacherID: {teacherID} will be notified.");
                 string msg = BuildMsgForTeacher("Первая пара сегодня: ", lesson, curriculums, techGroups);
                 targetTeachers.Add(teacher.id, (msg, timeOfLesson));
                 Program.UserList[teacher.id].notifiedToday = true;
             }
+            else
+            {
+                logger.Info($"Minutes to lesson: {minsToLesson}");
+                logger.Info($"Cur day: {curDay}, day of lesson: {dayOfLesson}");
+            }
         }
 
+        foreach (var user in targetTeachers)
+        {
+            logger.Info($"target teacher: {user}");
+        }
         return targetTeachers;
     }
 
@@ -381,12 +503,17 @@ public class Notifier
             if (user.Value.Info == User.UserInfo.teacher)
             {
                 if (user.Value.eveningNotify)
+                {
+                    logger.Info($"User {user.Value.id} is a teacher and subscribed.");
                     teachers.Add(user.Value);
+                }
             }
             else
             {
                 if (user.Value.eveningNotify)
+                {
                     students.Add(user.Value);
+                }
             }
         }
 
@@ -413,7 +540,7 @@ public class Notifier
             (Lesson lesson, List<Curriculum> curriculums, List<TechGroup> techGroups) = nextLessonsForTeachers[teacherID];
             if (curriculums.Count == 0)
             {
-                Console.WriteLine($"Teacher {teacherID} has no lessons tommorow.");
+                logger.Info($"Teacher {teacherID} has no lessons tommorow.");
                 continue;
             }
 
@@ -445,6 +572,7 @@ public class Notifier
         }
         var nextLessons = NextLessons(groupIDs);
 
+
         foreach (var student in students)
         {
             int studentGroupID = student.groupid;
@@ -452,7 +580,7 @@ public class Notifier
 
             if (curriculums.Count == 0)
             {
-                Console.WriteLine($"Group {studentGroupID} has no lessons tommorow.");
+                logger.Info($"Group {studentGroupID} has no lessons tommorow.");
                 continue;
             }
             TimeOfLesson timeOfLesson = TimeOfLesson.Parse(lesson.timeslot);
@@ -479,8 +607,12 @@ public class Notifier
         HashSet<int> groupIDs = new HashSet<int>();
         foreach (var user in Program.UserList)
         {
-            groupIDs.Add(user.Value.groupid);
+            if (user.Value.groupid != 0)
+            {
+                groupIDs.Add(user.Value.groupid);
+            }
         }
+        logger.Info($"Total groupIDS cnt: {groupIDs.Count}");
 
         return groupIDs;
     }
@@ -497,6 +629,7 @@ public class Notifier
         {
             teachersIDs.Add(teacher.teacherId);
         }
+        logger.Info($"Total teacherIDs cnt: {teachersIDs.Count}");
 
         return teachersIDs;
     }
@@ -510,11 +643,13 @@ public class Notifier
     {
         var nextLessons = new Dictionary<int, (Lesson, List<Curriculum>)>();
 
+        logger.Info($"Fetching next lessons for students.");
         foreach (int groupID in groupsIDs)
         {
             var nextLesson = CurrentSubject.GetCurrentLesson(groupID);
             nextLessons.Add(groupID, nextLesson);
         }
+        logger.Info($"Fetched lessons for students : {nextLessons.Count}");
         return nextLessons;
     }
 
@@ -527,11 +662,13 @@ public class Notifier
     {
         var nextLessonsForTeachers = new Dictionary<int, (Lesson, List<Curriculum>, List<TechGroup>)>();
 
+        logger.Info($"Fetching next lessons for teachers.");
         foreach (User teacher in teachers)
         {
             var nextLessonForTeacher = CurrentSubject.GetCurrentLessonforTeacher(teacher.teacherId);
             nextLessonsForTeachers.Add(teacher.teacherId, nextLessonForTeacher);
         }
+        logger.Info($"Fetched lessons for teachers : {nextLessonsForTeachers.Count}");
         return nextLessonsForTeachers;
     }
     /// <summary>
@@ -577,7 +714,7 @@ public class Notifier
     /// <param name="message">Message to user.</param>
     public static async Task SendMsg(long id, string message)
     {
-        Console.WriteLine($"Sending to {id} with message: {message}");
+        logger.Info($"Sending to {id} with message: {message}");
         await BOT.SendTextMessageAsync(id, message, ParseMode.Markdown);
     }
 }
