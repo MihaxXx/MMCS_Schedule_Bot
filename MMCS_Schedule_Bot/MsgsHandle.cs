@@ -30,6 +30,7 @@ namespace Console_Schedule_Bot
                 return;
 
             string Answer = "Server Error";
+            int flag = -1; 
 
             if (System.DateTime.UtcNow.Subtract(msg.Date).TotalMinutes > 3)
             {
@@ -100,23 +101,65 @@ namespace Console_Schedule_Bot
                 Answer = $"Уведомление за 15 минут до первой пары *{onOrOffMsg}*.";
             }
             else if (UserList[msg.Chat.Id].ident == 7)
-            { 
-                if (IsCourseGroup(msg.Text)) 
+            {
+                Answer = "Он бакалавр, магистр или аспирант?";
+                UserList[msg.Chat.Id].ident++;
+            }
+            else if (UserList[msg.Chat.Id].ident == 8)
+            {
+                switch (msg.Text)
                 {
-                    string[] id = msg.Text.Split('.'); 
-                    int course = int.Parse(id[0]);
-                    int group = int.Parse(id[1]); 
-                    int friendgroupid = CurrentSubject.CourseGroupToID(course, group);
-                    if (friendgroupid == -1)
-                        Answer = "Введена неверная группа";
-                    else
-                    {
-                        Answer = LessonToStr(CurrentSubject.GetCurrentLesson(friendgroupid));
-                        UserList[msg.Chat.Id].ident = 3;
-                    }
+                    case "бакалавр":
+                        flag = 1; 
+                        Answer = "Необходимо ввести курс и группу бакалавриата в виде х.х"; 
+                        break;
+                    case "магистр":
+                        flag = 2; 
+                        Answer = "Необходимо ввести курс и группу магистратуры в виде х.х";
+                        break;
+                    case "аспирант":
+                        flag = 3; 
+                        Answer = "Необходимо ввести курс и группу аспирантуры в виде х.х";
+                        break;
+                    case "преподаватель":
+                        break; 
+                    default:
+                        if (IsCourseGroup(msg.Text))
+                            UserList[msg.Chat.Id].ident++;
+                        else
+                            Answer = "Введены неверные данные"; 
+                        break; 
                 }
-                else 
-                    Answer = "Введена неверная группа"; 
+            }
+            else if (UserList[msg.Chat.Id].ident == 9)
+            { 
+                string[] id_str = msg.Text.Split('.'); 
+                int course = int.Parse(id_str[0]);
+                int group = int.Parse(id_str[1]);
+                int gradeid = -1; 
+                switch (flag)
+                {
+                    case 1:
+                        gradeid = GradeMethods.GetGradesList().Where(grade => grade.degree == "bachelor" && grade.num == group).First().id; 
+                        break;
+                    case 2:
+                        gradeid = GradeMethods.GetGradesList().Where(grade => grade.degree == "master" && grade.num == group).First().id;
+                        break;
+                    case 3:
+                        gradeid = GradeMethods.GetGradesList().Where(grade => grade.degree == "postgraduate" && grade.num == group).First().id;
+                        break;
+                    default:
+                        break; 
+                }
+                int id = GradeMethods.GetGroupsList(gradeid).Where(g => g.num == group).First().id; 
+                // int friendgroupid = CurrentSubject.CourseGroupToID(course, group);
+                if (id == -1)
+                    Answer = "Введена неверная группа";
+                else
+                {
+                    Answer = LessonToStr(CurrentSubject.GetCurrentLesson(id));
+                    UserList[msg.Chat.Id].ident = 3;
+                }
             }
             else
             {
