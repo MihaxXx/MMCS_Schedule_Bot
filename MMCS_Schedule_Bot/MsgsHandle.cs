@@ -64,7 +64,7 @@ namespace Console_Schedule_Bot
                         Answer = s;
                     }
                     else
-                     Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
+                        Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
                 }
                 else
                 {
@@ -99,6 +99,61 @@ namespace Console_Schedule_Bot
                 string onOrOffMsg = onOrOff ? "включено" : "выключено";
                 Answer = $"Уведомление за 15 минут до первой пары *{onOrOffMsg}*.";
             }
+            else if (UserList[msg.Chat.Id].ident == 7)
+            {
+                FlagInFindFriend[msg.Chat.Id] = -1;
+                switch (msg.Text)
+                {
+                    case "бакалавр":
+                        FlagInFindFriend[msg.Chat.Id] = 1;
+                        Answer = "Необходимо ввести курс и группу бакалавриата в виде х.х";
+                        break;
+                    case "магистр":
+                        FlagInFindFriend[msg.Chat.Id] = 2;
+                        Answer = "Необходимо ввести курс и группу магистратуры в виде х.х";
+                        break;
+                    case "аспирант":
+                        FlagInFindFriend[msg.Chat.Id] = 3;
+                        Answer = "Необходимо ввести курс и группу аспирантуры в виде х.х";
+                        break;
+                    case "преподаватель":
+                        break;
+                    default:
+                        if (IsCourseGroup(msg.Text))
+                        {
+                            string[] id_str = msg.Text.Split('.');
+                            int course = int.Parse(id_str[0]);
+                            int group = int.Parse(id_str[1]);
+                            int gradeid = -1;
+                            switch (FlagInFindFriend[msg.Chat.Id])
+                            {
+                                case 1:
+                                    gradeid = GradeMethods.GetGradesList().Where(grade => grade.degree == "bachelor" && grade.num == group).First().id;
+                                    break;
+                                case 2:
+                                    gradeid = GradeMethods.GetGradesList().Where(grade => grade.degree == "master" && grade.num == group).First().id;
+                                    break;
+                                case 3:
+                                    gradeid = GradeMethods.GetGradesList().Where(grade => grade.degree == "postgraduate" && grade.num == group).First().id;
+                                    break;
+                                default:
+                                    break;
+                            }
+                            int id = GradeMethods.GetGroupsList(gradeid).Where(g => g.num == group).First().id;
+                            if (id == -1)
+                                Answer = "Введена неверная группа";
+                            else
+                            {
+                                Answer = LessonToStr(CurrentSubject.GetCurrentLesson(id));
+                                FlagInFindFriend[msg.Chat.Id] = -1;
+                                UserList[msg.Chat.Id].ident = 3;
+                            }
+                        }
+                        else
+                            Answer = "Введены неверные данные";
+                        break;
+                }
+            }
             else
             {
                 try
@@ -116,6 +171,11 @@ namespace Console_Schedule_Bot
                         case "найти преподавателя":
                             Answer = "Введи фамилию преподавателя";
                             UserList[msg.Chat.Id].ident = 4;
+                            break;
+                        case "/findfriend":
+                        case "найти друга":
+                            Answer = "Он бакалавр, магистр или аспирант?";
+                            UserList[msg.Chat.Id].ident = 7;
                             break;
                         case "/week":
                         case "расписание на неделю":
@@ -285,6 +345,36 @@ namespace Console_Schedule_Bot
                         break;
                 }
                 UserList[id].groupid = groupid;
+                return true;
+            }
+            catch (Exception e)
+            {
+                WriteLine("Ошибка: " + e.Message);
+                return false;
+            }
+        }
+
+
+        static bool IsCourseGroup(string s)
+        {
+            try
+            {
+                if (!s.Contains('.'))
+                    return false;
+                var lst = s.Split('.').ToArray();
+                if (lst[0] == String.Empty || lst[1] == String.Empty || lst.Length > 2 || lst.Length < 1)
+                {
+                    WriteLine("Ошибка ввода!");
+                    return false;
+                }
+                var (course, group) = (-1, -1);
+                bool IsCourse = int.TryParse(lst[0], out course);
+                bool IsGroup = int.TryParse(lst[1], out group);
+                if (!IsCourse || !IsGroup)
+                {
+                    WriteLine("Ошибка парсинга!");
+                    return false;
+                }
                 return true;
             }
             catch (Exception e)
@@ -477,7 +567,8 @@ namespace Console_Schedule_Bot
 /today — расписание на сегодня
 /tomorrow — список пар на завтра
 /week — расписание на неделю
-/findteacher — поиск преподавателя
+/findteacher — поиск преподавателя 
+/findfriend — поиск друга
 /info — краткое описание бота    
 /knowme — показать ваш id
 /eveningNotify — настроить вечернее уведомление
