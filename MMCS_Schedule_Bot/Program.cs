@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.IO;
 using System.Threading;
 using static System.Console;
+using NLog;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Args;
@@ -20,7 +21,7 @@ using Notify;
 
 namespace Console_Schedule_Bot
 {
-   
+
     partial class Program
     {
         static void Main(string[] args)
@@ -32,16 +33,18 @@ namespace Console_Schedule_Bot
             GetElectives();
 
             BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
-            WriteLine("Подключен бот.");
+            logger.Info("Подключен бот.");
             BOT.OnMessage += BotOnMessageReceived;
 
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
-            WriteLine("Ожидает сообщений...");
             Scheduler.RunNotifier().GetAwaiter().GetResult();
+            logger.Info("Ожидает сообщений...");
             Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
             _closing.WaitOne();
         }
 
+
+        static public Logger logger = LogManager.GetCurrentClassLogger();
         /// <summary>
         /// Used for teacher registration and finding teacher
         /// </summary>
@@ -72,7 +75,7 @@ namespace Console_Schedule_Bot
         protected static void OnExit(object sender, ConsoleCancelEventArgs args)
         {
             BOT.StopReceiving();
-            WriteLine("Exit.");
+            logger.Info("Exit.");
             _closing.Set();
         }
 
@@ -84,7 +87,7 @@ namespace Console_Schedule_Bot
             var t = TeacherMethods.GetTeachersList();
             foreach (Teacher x in t)
                 TeacherList.Add(x.id, x);
-            WriteLine("Список преподавателей получен.");
+            logger.Info("Список преподавателей получен.");
         }
 
         /// <summary>
@@ -97,7 +100,7 @@ namespace Console_Schedule_Bot
             {
                 GradeList[i].Groups = GradeMethods.GetGroupsList(GradeList[i].id);
             }
-            WriteLine("Список курсов получен.");
+            logger.Info("Список курсов получен.");
         }
 
         /// <summary>
@@ -108,11 +111,11 @@ namespace Console_Schedule_Bot
             try
             {
                 Program.electives = Elective.GetElectives();
-                WriteLine("Список факультативов получен.");
+                logger.Info("Список факультативов получен.");
             }
             catch (FileNotFoundException)
             {
-                Console.WriteLine("Список факультативов не был загружен!");
+                logger.Info("Список факультативов не был загружен!");
             }
             electivesStr = electives == null ? "Нет данных о факультативах" : Elective.ElectivesToString(electives);
         }
@@ -130,8 +133,8 @@ namespace Console_Schedule_Bot
             }
             catch (FileNotFoundException e)
             {
-                WriteLine("File 'token.key' wasn't found in the working directory!\nPlease save Telegram BOT token to file named 'token.key'.");
-                WriteLine(e.Message);
+                logger.Info("File 'token.key' wasn't found in the working directory!\nPlease save Telegram BOT token to file named 'token.key'.");
+                logger.Info(e.Message);
                 Environment.Exit(1);
             }
             return token;
