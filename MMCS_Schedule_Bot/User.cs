@@ -40,6 +40,10 @@ namespace Console_Schedule_Bot
         /// Flag that user was notified today with preLessonNotifier
         /// </summary>
         public bool notifiedToday = false;
+        /// <summary>
+        /// The last access time.
+        /// </summary>
+        public DateTime LastAccess = new DateTime(2019,4,23,17,30,00); //presentation date
 
         /// <summary>
         /// Possible types of users

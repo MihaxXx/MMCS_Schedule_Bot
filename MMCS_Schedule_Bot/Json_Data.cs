@@ -1,85 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.IO;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Console_Schedule_Bot
 {
     class Json_Data
     {
-        public User[] User { get; set; }
-
-        static private string serialized;
-
+        /// <summary>
+        /// Returns the date of last modification of UserDB file.
+        /// </summary>
+        /// <returns>The date.</returns>
         static public DateTime LastModified()
         {
-            return File.GetLastWriteTime("Json_Data");
+            return File.GetLastWriteTime("UserDB.json");
         }
 
+        /// <summary>
+        /// Saves the UserList to file.
+        /// </summary>
         static public void WriteData()
         {
-            Json_Data myCollection = new Json_Data();
-            myCollection.User = new User[Program.UserList.Count];
-
-            int i = 0;
-            foreach (KeyValuePair<long, User> us in Program.UserList)
-            {
-                myCollection.User[i] = new User()
-                {
-                    ident = us.Value.ident,
-                    Info = us.Value.Info,
-                    teacherId = us.Value.teacherId,
-                    id = us.Value.id,
-                    groupid = us.Value.groupid,
-                    eveningNotify = us.Value.eveningNotify,
-                    preLessonNotify = us.Value.preLessonNotify,
-                    notifiedToday = us.Value.notifiedToday
-                };
-                i++;
-            }
-
-            serialized = JsonConvert.SerializeObject(myCollection);
-            if (serialized.Count() > 1)
-            {
-                if (!File.Exists("Json_Data"))
-                    File.Create("Json_Data").Close();
-                File.WriteAllText("Json_Data", serialized, Encoding.UTF8);
-            }
-
-
+            File.WriteAllText("UserDB.json", JsonConvert.SerializeObject(Program.UserList, Formatting.Indented), Encoding.UTF8);
         }
 
+        /// <summary>
+        /// Reads the UserList from file.
+        /// </summary>
         static public void ReadData()
         {
-            if (File.Exists("Json_Data"))
+            if (File.Exists("UserDB.json"))
             {
-                serialized = File.ReadAllText("Json_Data", Encoding.UTF8);
-                dynamic json = JObject.Parse(serialized);
-
-                for (int i = 0; i < json.User.Count; i++)
-                {
-                    if (!json.User[i].ContainsKey("eveningNotify"))
-                        json.User[i].eveningNotify = false;
-                    if (!json.User[i].ContainsKey("preLessonNotify"))
-                        json.User[i].preLessonNotify = false;
-                    if (!json.User[i].ContainsKey("notifiedToday"))
-                        json.User[i].notifiedToday = false;
-                    User x = new User
-                    {
-                        ident = json.User[i].ident,
-                        id = json.User[i].id,
-                        teacherId = json.User[i].teacherId,
-                        Info = json.User[i].Info,
-                        groupid = json.User[i].groupid,
-                        eveningNotify = json.User[i].eveningNotify,
-                        preLessonNotify = json.User[i].preLessonNotify,
-                        notifiedToday = json.User[i].notifiedToday
-                    };
-                    Program.UserList.Add(x.id, x);
-                }
+                Program.UserList = JsonConvert.DeserializeObject<Dictionary<long, User>>(File.ReadAllText("UserDB.json", Encoding.UTF8));
             }
 
         }
