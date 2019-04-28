@@ -47,7 +47,7 @@ namespace Notify
             {
                 logger.Info("Updating curWeek...");
                 logger.Info($"Cur week setting: {TimeOfLesson.curWeek}");
-                Week curWeek = CurrentSubject.GetCurrentWeek();
+                Week curWeek = CurrentSubject.GetCurrentWeekFromAPI();
                 TimeOfLesson.curWeek = curWeek;
                 logger.Info($"Cur week after setting: {TimeOfLesson.curWeek}");
             });
