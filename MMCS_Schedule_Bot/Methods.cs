@@ -161,7 +161,7 @@ namespace API
         public static int GetNextDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 7) % 7;
 
         /// <summary>
-        /// Request current week
+        /// Returns current week
         /// </summary>
         /// <returns></returns>
         public static Week GetCurrentWeek()
@@ -171,13 +171,24 @@ namespace API
 			Week week = SchRequests.SchRequests.DeSerializationObjFromStr<Week>(response);
             return week; 
         }
-		/// <summary>
-		/// Gets Schedule GroupID by <paramref name="course"/> and <paramref name="group"/>
-		/// </summary>
-		/// <param name="course"></param>
-		/// <param name="group"></param>
-		/// <returns>GroupID</returns>
-		public static int CourseGroupToID(int course, int group)
+        /// <summary>
+        /// Request current week
+        /// </summary>
+        /// <returns></returns>
+        public static Week GetCurrentWeekFromAPI()
+        {
+            string url = "http://schedule.sfedu.ru/APIv0/time/week/";
+            string response = SchRequests.SchRequests.Request(url);
+            Week week = SchRequests.SchRequests.DeSerializationObjFromStr<Week>(response);
+            return week;
+        }
+        /// <summary>
+        /// Gets Schedule GroupID by <paramref name="course"/> and <paramref name="group"/>
+        /// </summary>
+        /// <param name="course"></param>
+        /// <param name="group"></param>
+        /// <returns>GroupID</returns>
+        public static int CourseGroupToID(int course, int group)
 		{
 			string response1 = SchRequests.SchRequests.Request("http://schedule.sfedu.ru/APIv0/group/list/"+ course);
 			Group[] lstOfGroups = SchRequests.SchRequests.DeSerializationFromStr<Group>(response1);
