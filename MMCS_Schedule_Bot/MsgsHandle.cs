@@ -37,6 +37,9 @@ namespace Console_Schedule_Bot
                 return;
             }
 
+            if (UserList.ContainsKey(msg.Chat.Id))
+                UserList[msg.Chat.Id].LastAccess = DateTime.Now;
+
             if (!IsRegistered(msg.Chat.Id))
             {
                 if (!UserList.ContainsKey(msg.Chat.Id))

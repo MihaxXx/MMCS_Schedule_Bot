@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using Newtonsoft.Json;
-
+using NLog;
+ 
 namespace Console_Schedule_Bot
 {
-    class Json_Data
+    public class Json_Data
     {
+        static public Logger logger = LogManager.GetCurrentClassLogger();
         /// <summary>
         /// Returns the date of last modification of UserDB file.
         /// </summary>
@@ -23,6 +25,7 @@ namespace Console_Schedule_Bot
         static public void WriteData()
         {
             File.WriteAllText("UserDB.json", JsonConvert.SerializeObject(Program.UserList, Formatting.Indented), Encoding.UTF8);
+            logger.Info($"Записаны в файл данные {Program.UserList.Count} пользователей.");
         }
 
         /// <summary>
@@ -33,6 +36,7 @@ namespace Console_Schedule_Bot
             if (File.Exists("UserDB.json"))
             {
                 Program.UserList = JsonConvert.DeserializeObject<Dictionary<long, User>>(File.ReadAllText("UserDB.json", Encoding.UTF8));
+                logger.Info($"Прочитаны из файла данные {Program.UserList.Count} пользователей.");
             }
 
         }

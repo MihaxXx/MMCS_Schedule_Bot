@@ -39,7 +39,7 @@ namespace Console_Schedule_Bot
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
             Scheduler.RunNotifier().GetAwaiter().GetResult();
             logger.Info("Ожидает сообщений...");
-            Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
+            CancelKeyPress += OnExit;
             _closing.WaitOne();
         }
 
@@ -75,6 +75,7 @@ namespace Console_Schedule_Bot
         protected static void OnExit(object sender, ConsoleCancelEventArgs args)
         {
             BOT.StopReceiving();
+            Json_Data.WriteData();
             logger.Info("Exit.");
             _closing.Set();
         }
