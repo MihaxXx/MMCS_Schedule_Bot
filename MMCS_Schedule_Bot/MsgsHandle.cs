@@ -148,24 +148,25 @@ namespace Console_Schedule_Bot
                             break;
 
                         case "/eveningnotify":
-                            Answer = $"Настрой вечернее уведомление о завтрашней первой паре.";
+                            Answer = $"Сейчас вечернее уведомление о завтрашней первой паре *{(UserList[msg.Chat.Id].eveningNotify? "включено" : "выключено")}*. \nНастройте его.";
                             UserList[msg.Chat.Id].ident = 5;
-                            await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: notifierKeyboard);
+                            await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, ParseMode.Markdown, replyMarkup: notifierKeyboard);
                             return;
 
                         case "/prelessonnotify":
-                            Answer = $"Настрой уведомление за 15 минут до первой пары.";
+                            Answer = $"Сейчас уведомление за 15 минут до первой пары *{(UserList[msg.Chat.Id].preLessonNotify ? "включено" : "выключено")}*. \nНастройте его.";
                             UserList[msg.Chat.Id].ident = 6;
-                            await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: notifierKeyboard);
+                            await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, ParseMode.Markdown, replyMarkup: notifierKeyboard);
                             return;
 
 
                         case "/forget":
                         case "забудь меня":
-                            UserList[msg.Chat.Id].ident = 0;
+                            //UserList[msg.Chat.Id].ident = 0;
+                            UserList.Remove(msg.Chat.Id);
                             Json_Data.WriteData();
                             Answer = "Я тебя забыл! Для повторной регистрации пиши /start";
-                            await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
+                            await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: new ReplyKeyboardRemove());
                             return;
 
                         case "помощь":
@@ -481,7 +482,7 @@ namespace Console_Schedule_Bot
 /info — краткое описание бота    
 /knowme — показать ваш id
 /eveningNotify — настроить вечернее уведомление
-/preLessonNotify — настроить уведомление за 15 минут первой до пары
+/preLessonNotify — настроить уведомление за 15 минут до первой пары
 /optionalcourses — информация о факультативах
 /currweek — текущая неделя
 /forget — сменить пользователя
