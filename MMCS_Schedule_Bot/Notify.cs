@@ -333,9 +333,9 @@ public class Notifier
         var nextLessons = NextLessons(groupIDs);
         
         Week curWeek = CurrentSubject.GetCurrentWeek();
-        logger.Info($"Get current week: {curWeek}")
-        logger.Info($"Students cnt: {students.Count}")
-        logger.Info($"Students: {students}")
+        logger.Info($"Get current week: {curWeek}");
+        logger.Info($"Students cnt: {students.Count}");
+        logger.Info($"Students: {students}");
         foreach (var student in students)
         {
             int studentGroupID = student.groupid;
