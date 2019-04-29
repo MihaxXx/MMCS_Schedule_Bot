@@ -224,7 +224,6 @@ public class Notifier
         string TOKEN = Program.ReadToken();
         BOT = new Telegram.Bot.TelegramBotClient(TOKEN);
         (List<User> students, List<User> teachers) = SplitUsers(Program.UserList);
-        Console.WriteLine("Notifier running...");
         logger.Info("Notifier running...");
         var targetStudentsInfo = FilterStudents(students);
         var targetTeachersInfo = FilterTeachers(teachers);
@@ -242,7 +241,6 @@ public class Notifier
         string TOKEN = Program.ReadToken();
         BOT = new Telegram.Bot.TelegramBotClient(TOKEN);
 
-        Console.WriteLine("Notifier running...");
         (List<User> students, List<User> teachers) = SplitUsersPreLesson(Program.UserList);
         logger.Info("PreLessonNotifier running...");
         logger.Info($"Students cnt: {students.Count}");
@@ -301,7 +299,7 @@ public class Notifier
             {
                 if (user.Value.preLessonNotify && !user.Value.notifiedToday)
                 {
-                    logger.Info($"User {user.Value.id} is a teeacher and subscribed on preLesson.");
+                    logger.Info($"User {user.Value.id} is a teacher and subscribed on preLesson.");
                     teachers.Add(user.Value);
                 }
             }
@@ -333,8 +331,11 @@ public class Notifier
             return targetStudents;
         }
         var nextLessons = NextLessons(groupIDs);
-
+        
         Week curWeek = CurrentSubject.GetCurrentWeek();
+        logger.Info($"Get current week: {curWeek}")
+        logger.Info($"Students cnt: {students.Count}")
+        logger.Info($"Students: {students}")
         foreach (var student in students)
         {
             int studentGroupID = student.groupid;
