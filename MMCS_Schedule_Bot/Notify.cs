@@ -198,7 +198,7 @@ namespace Notify
         /// <param name="context">Context.</param>
         public async Task Execute(IJobExecutionContext context)
         {
-            await Notifier.PreLessonNotify();
+            await Task.WhenAll(Notifier.PreLessonNotify().ToArray());
         }
     }
 }
@@ -236,7 +236,7 @@ public class Notifier
     /// <summary>
     /// Pre lesson notify.
     /// </summary>
-    public static Task PreLessonNotify()
+    public static List<Task> PreLessonNotify()
     {
         string TOKEN = Program.ReadToken();
         BOT = new Telegram.Bot.TelegramBotClient(TOKEN);
@@ -260,9 +260,10 @@ public class Notifier
         }
         Task studentsTask = RunTasks(targetStudentsInfo);
         Task teachersTask = RunTasks(targetTeachersInfo);
-        logger.Info("PreLessonNotifier finished.");
+        List<Task> tasks = new List<Task> { studentsTask, teachersTask };
         Json_Data.WriteData();
-        return teachersTask;
+        logger.Info("PreLessonNotifier finished.");
+        return tasks;
     }
 
 
@@ -331,7 +332,7 @@ public class Notifier
             return targetStudents;
         }
         var nextLessons = NextLessons(groupIDs);
-        
+
         Week curWeek = CurrentSubject.GetCurrentWeek();
         logger.Info($"Get current week: {curWeek}");
         logger.Info($"Students cnt: {students.Count}");
