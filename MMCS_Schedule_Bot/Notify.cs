@@ -243,24 +243,43 @@ public class Notifier
 
         (List<User> students, List<User> teachers) = SplitUsersPreLesson(Program.UserList);
         logger.Info("PreLessonNotifier running...");
-        logger.Info($"Students cnt: {students.Count}");
-        logger.Info($"Teachers cnt: {teachers.Count}");
-        logger.Info($"Total users: {students.Count + teachers.Count}");
+        if (students.Any())
+            logger.Info($"Students cnt: {students.Count}");
+        if (teachers.Any())
+            logger.Info($"Teachers cnt: {teachers.Count}");
+
+        List<Task> tasks = new List<Task>();
         var targetStudentsInfo = FilterStudentsPreLesson(students);
-        logger.Info($"Target students cnt: {students.Count}");
-        foreach (var target_student in targetStudentsInfo)
+        if (targetStudentsInfo.Any())
         {
-            logger.Info($"Target teacher: {target_student}");
+            logger.Info($"Target students cnt: {students.Count}");
+            foreach (var target_student in targetStudentsInfo)
+            {
+                logger.Info($"Target teacher: {target_student}");
+            }
+            Task studentsTask = RunTasks(targetStudentsInfo);
+            tasks.Append(studentsTask);
+        }
+        else
+        {
+            logger.Info("No target students.");
         }
         var targetTeachersInfo = FilterTeachersPreLesson(teachers);
-        logger.Info($"Target teachers cnt: {teachers.Count}");
-        foreach (var target_teacher in targetTeachersInfo)
+        if (targetTeachersInfo.Any())
         {
-            logger.Info($"Target teacher: {target_teacher}");
+            logger.Info($"Target teachers cnt: {teachers.Count}");
+            foreach (var target_teacher in targetTeachersInfo)
+            {
+                logger.Info($"Target teacher: {target_teacher}");
+            }
+            Task teachersTask = RunTasks(targetTeachersInfo);
+            tasks.Append(teachersTask);
+
         }
-        Task studentsTask = RunTasks(targetStudentsInfo);
-        Task teachersTask = RunTasks(targetTeachersInfo);
-        List<Task> tasks = new List<Task> { studentsTask, teachersTask };
+        else
+        {
+            logger.Info("No target teachers.");
+        }
         Json_Data.WriteData();
         logger.Info("PreLessonNotifier finished.");
         return tasks;
@@ -335,25 +354,41 @@ public class Notifier
 
         Week curWeek = CurrentSubject.GetCurrentWeek();
         logger.Info($"Get current week: {curWeek}");
+        if (!students.Any())
+        {
+            logger.Info("Students dict is empty.");
+            return targetStudents;
+        }
         logger.Info($"Students cnt: {students.Count}");
-        logger.Info($"Students: {students}");
         foreach (var student in students)
         {
+            logger.Info($"Cur student: {student.ToString()}");
             int studentGroupID = student.groupid;
             (Lesson lesson, List<Curriculum> curriculums) = nextLessons[studentGroupID];
 
-            if (curriculums.Count == 0)
+            if (!curriculums.Any())
             {
                 logger.Info($"Group {studentGroupID} has no lessons tommorow.");
                 continue;
+            }
+            else
+            {
+                foreach (var cur in curriculums)
+                    logger.Info(cur.ToString());
             }
 
             int curDay = CurrentSubject.GetCurDayOfWeek();
             // If user enable preLessonNotify after first lesson, we need to send tomorrow
             var todayLessons = CurrentSubject.GetTodaySchedule(studentGroupID);
+            if (!todayLessons.Any())
+            {
+                logger.Info("Hasn't lessons today.");
+                continue;
+            }
+
             foreach (var todayLesson in todayLessons)
             {
-                logger.Info(todayLesson);
+                logger.Info($"today lesson: {todayLesson}");
             }
 
             TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
@@ -390,9 +425,14 @@ public class Notifier
             }
         }
 
-        foreach (var user in targetStudents)
+        if (!targetStudents.Any())
         {
-            logger.Info($"target student: {user}");
+            logger.Info("No target students.");
+        }
+        else
+        {
+            foreach (var user in targetStudents)
+                logger.Info($"target student: {user}");
         }
         return targetStudents;
     }
@@ -411,12 +451,24 @@ public class Notifier
         }
         var nextLessonsForTeachers = NextLessonsForTeachers(teachers);
 
+        if (!nextLessonsForTeachers.Any())
+        {
+            logger.Info("No next lessons for teachers.");
+            return targetTeachers;
+        }
+
         Week curWeek = CurrentSubject.GetCurrentWeek();
+        if (!teachers.Any())
+        {
+            logger.Info("No teachers.");
+            return targetTeachers;
+        }
+
         foreach (var teacher in teachers)
         {
             int teacherID = teacher.teacherId;
             (Lesson lesson, List<Curriculum> curriculums, List<TechGroup> techGroups) = nextLessonsForTeachers[teacherID];
-            if (curriculums.Count == 0)
+            if (!curriculums.Any())
             {
                 logger.Info($"Teacher {teacherID} has no lessons today.");
                 continue;
@@ -426,9 +478,15 @@ public class Notifier
             int curDay = CurrentSubject.GetCurDayOfWeek();
             // If user enable preLessonNotify after first lesson, we need to send tomorrow
             var todayLessons = CurrentSubject.GetTodayScheduleforTeacher(teacherID);
-            foreach (var todayLesson in todayLessons)
+            if (!todayLessons.Any())
             {
-                logger.Info($"today lesson: {todayLesson}");
+                logger.Info("No today lessons");
+                continue;
+            }
+            else
+            {
+                foreach (var todayLesson in todayLessons)
+                    logger.Info($"today lesson: {todayLesson}");
             }
 
             TimeOfLesson firstLessonTime = TimeOfLesson.Parse(todayLessons.First().Item1.timeslot);
@@ -465,9 +523,15 @@ public class Notifier
             }
         }
 
-        foreach (var user in targetTeachers)
+        if (!targetTeachers.Any())
         {
-            logger.Info($"target teacher: {user}");
+            logger.Info("No target teachers.");
+            return targetTeachers;
+        }
+        else
+        {
+            foreach (var teacher in targetTeachers)
+                logger.Info($"target teacher: {teacher}");
         }
         return targetTeachers;
     }
@@ -499,6 +563,8 @@ public class Notifier
     {
         List<User> students = new List<User>();
         List<User> teachers = new List<User>();
+        if (!users.Any())
+            return (students, teachers);
         foreach (var user in users)
         {
             if (user.Value.Info == User.UserInfo.teacher)
