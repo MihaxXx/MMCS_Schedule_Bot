@@ -125,21 +125,21 @@ namespace ScheduleBot
                             if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
                                 Answer = WeekSchToStr(StudentMethods.GetWeekSchedule(UserList[msg.Chat.Id].groupid));
                             else
-                                Answer = WeekSchTechToStr(TeacherMethods.GetWeekSchedulee((UserList[msg.Chat.Id].teacherId));
+                                Answer = WeekSchTechToStr(TeacherMethods.GetWeekSchedule(UserList[msg.Chat.Id].teacherId));
                             break;
                         case "/today":
                         case "расписание на сегодня":
                             if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
                                 Answer = DaySchToStr(StudentMethods.GetTodaySchedule(UserList[msg.Chat.Id].groupid));
                             else
-                                Answer = DaySchTechToStr(TeacherMethods.GetTodaySchedulee((UserList[msg.Chat.Id].teacherId));
+                                Answer = DaySchTechToStr(TeacherMethods.GetTodaySchedule(UserList[msg.Chat.Id].teacherId));
                             break;
                         case "/tomorrow":
                         case "расписание на завтра":
                             if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
                                 Answer = DaySchToStr(StudentMethods.GetTomorrowSchedule(UserList[msg.Chat.Id].groupid));
                             else
-                                Answer = DaySchTechToStr(TeacherMethods.GetTomorrowSchedulee((UserList[msg.Chat.Id].teacherId));
+                                Answer = DaySchTechToStr(TeacherMethods.GetTomorrowSchedule(UserList[msg.Chat.Id].teacherId));
                             break;
                         case "/knowme":
                         case "знаешь меня?":

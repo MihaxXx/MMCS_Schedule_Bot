@@ -116,7 +116,7 @@ namespace ScheduleBot
             logger.Info("Начата загрузка расписаний групп.");
             foreach (var grade in GradeList)
                 foreach (var group in grade.Groups)
-                    GroupShedList[group.id] = (StudentMethods.UpdateWeekSchedule(group.id),DateTime.Now);
+                    GroupShedList[group.id] = (StudentMethods.RequestWeekSchedule(group.id),DateTime.Now);
             logger.Info("Завершена загрузка расписаний групп.");
         }
 

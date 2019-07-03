@@ -176,7 +176,7 @@ namespace API
         /// Request current week
         /// </summary>
         /// <returns></returns>
-        public static Week UpdateCurrentWeek()
+        public static Week RequestCurrentWeek()
         {
             string url = "http://schedule.sfedu.ru/APIv0/time/week/";
             string response = SchRequests.SchRequests.Request(url);
@@ -243,7 +243,7 @@ namespace API
         /// </summary>
         /// <param name="groupID"></param>
         /// <returns>Ordered by day of week and time week schedule</returns>
-        public static List<(Lesson, List<Curriculum>)> UpdateWeekSchedule(int groupID)
+        public static List<(Lesson, List<Curriculum>)> RequestWeekSchedule(int groupID)
 		{
 			string url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + groupID;
 			string response = SchRequests.SchRequests.Request(url);
@@ -268,7 +268,7 @@ namespace API
             if (!ScheduleBot.Program.GroupShedList.ContainsKey(groupID) || DateTime.Now - ScheduleBot.Program.GroupShedList[groupID].Item2 > TimeSpan.FromHours(7*24))
             {
                 try
-                { ScheduleBot.Program.GroupShedList[groupID] = (UpdateWeekSchedule(groupID), DateTime.Now); }
+                { ScheduleBot.Program.GroupShedList[groupID] = (RequestWeekSchedule(groupID), DateTime.Now); }
                 catch (System.Net.WebException)
                 {
                     //TODO: logging
