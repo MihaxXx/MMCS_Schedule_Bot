@@ -56,6 +56,11 @@ namespace ScheduleBot
         static public Dictionary<int, Teacher> TeacherList = new Dictionary<int, Teacher>();
 
         /// <summary>
+        /// Cached teachers schedule
+        /// </summary>
+        static public Dictionary<int, (List<(Lesson, List<Curriculum>, List<TechGroup>)>, DateTime)> TeacherSchedule = new Dictionary<int, (List<(Lesson, List<Curriculum>, List<TechGroup>)>, DateTime)>();
+
+        /// <summary>
         /// List of grades
         /// </summary>
         static public List<Grade> GradeList = new List<Grade>();

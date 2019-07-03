@@ -257,8 +257,6 @@ namespace API
         // Учёная степень
         public string degree { get; set; }
 
-        List<(Lesson, List<Curriculum>, List<TechGroup>)> schedule { get; set; }
-
         /// Конструктор
         Teacher(int id, string name, string degree)
         {

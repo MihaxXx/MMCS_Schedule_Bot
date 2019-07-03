@@ -477,7 +477,7 @@ public class Notifier
 
             int curDay = CurrentSubject.GetCurDayOfWeek();
             // If user enable preLessonNotify after first lesson, we need to send tomorrow
-            var todayLessons = TeacherMethods.GetTodayScheduleforTeacher(teacherID);
+            var todayLessons = TeacherMethods.GetTodaySchedule((teacherID);
             if (!todayLessons.Any())
             {
                 logger.Info("No today lessons");
@@ -732,7 +732,7 @@ public class Notifier
         logger.Info($"Fetching next lessons for teachers.");
         foreach (User teacher in teachers)
         {
-            var nextLessonForTeacher = TeacherMethods.GetCurrentLessonforTeacher(teacher.teacherId);
+            var nextLessonForTeacher = TeacherMethods.GetCurrentLesson((teacher.teacherId);
             nextLessonsForTeachers.Add(teacher.teacherId, nextLessonForTeacher);
         }
         logger.Info($"Fetched lessons for teachers : {nextLessonsForTeachers.Count}");

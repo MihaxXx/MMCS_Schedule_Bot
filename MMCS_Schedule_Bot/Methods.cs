@@ -304,6 +304,10 @@ namespace API
 
     public static class TeacherMethods
     {
+        /// <summary>
+        /// Get teachers list (not cached)
+        /// </summary>
+        /// <returns></returns>
         public static Teacher[] GetTeachersList()
         {
             string url = $"http://schedule.sfedu.ru/APIv0/teacher/list";
@@ -312,28 +316,19 @@ namespace API
         }
 
         /// <summary> 
-        /// Get nearest Lesson for the Teacher 
+        /// Get next Lesson for the Teacher (cached)
         /// </summary> 
         /// <param name="teacherID"></param> 
         /// <returns></returns> 
-        public static (Lesson, List<Curriculum>, List<TechGroup>) GetCurrentLessonforTeacher(int teacherID)
+        public static (Lesson, List<Curriculum>, List<TechGroup>) GetCurrentLesson(int teacherID)
         {
-            string url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + teacherID;
-            string response = SchRequests.SchRequests.Request(url);
-            SchOfTeacher schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfTeacher>(response);
-            if (schedule.lessons.Count > 0)
+            var schedule = GetWeekSchedule(teacherID);
+            if (schedule.Count > 0)
             {
                 var cur_week = GetCurrentWeek();
-                var les_res = schedule.lessons.
-                    OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot), cur_week)).First();
-                var cur_res = schedule.curricula.FindAll(c => c.lessonid == les_res.id);
-                var gr_res = schedule.groups.FindAll(g => g.uberid == les_res.uberid);
-                return (les_res, cur_res, gr_res);
+                return GetWeekSchedule(teacherID).OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.Item1.timeslot), cur_week)).First();
             }
-            else
-            {
-                return (new Lesson(), new List<Curriculum>(), new List<TechGroup>());
-            }
+            return (new Lesson(), new List<Curriculum>(), new List<TechGroup>());
         }
 
         /// <summary>
@@ -350,11 +345,11 @@ namespace API
         }
 
         /// <summary>
-		/// Ordered Week Schedule for teacher
-		/// </summary>
-		/// <param name="teacherID"></param>
-		/// <returns></returns>
-		public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetWeekScheduleforTeacher(int teacherID)
+        /// Request week schedule for <paramref name="teacherID"/>
+        /// </summary>
+        /// <param name="teacherID"></param>
+        /// <returns>Ordered by day of week and time week schedule</returns>
+		public static List<(Lesson, List<Curriculum>, List<TechGroup>)> RequestWeekSchedule(int teacherID)
         {
             string url = "http://schedule.sfedu.ru/APIv1/schedule/teacher/" + teacherID;
             string response = SchRequests.SchRequests.Request(url);
@@ -370,28 +365,48 @@ namespace API
         }
 
         /// <summary>
+		/// Get week schedule for <paramref name="teacherID"/> (cached)
+		/// </summary>
+		/// <param name="teacherID"></param>
+		/// <returns>Ordered by day of week and time week schedule</returns>
+        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetWeekSchedule(int teacherID)
+        {
+            //if cached schedule is too old than request new
+            if (!ScheduleBot.Program.TeacherSchedule.ContainsKey(teacherID) || DateTime.Now - ScheduleBot.Program.TeacherSchedule[teacherID].Item2 > TimeSpan.FromHours(7 * 24))
+            {
+                try
+                { ScheduleBot.Program.TeacherSchedule[teacherID] = (RequestWeekSchedule(teacherID), DateTime.Now); }
+                catch (System.Net.WebException)
+                {
+                    //TODO: logging
+                }
+            }
+            return ScheduleBot.Program.TeacherSchedule[teacherID].Item1;
+        }
+
+        /// <summary>
         /// Ordered <paramref name="day"/> schedule for teacher
         /// </summary>
         /// <param name="teacherID"></param>
         /// <param name="day">Day of week, 0..6</param>
         /// <returns></returns>
-        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetDayScheduleforTeacher(int teacherID, int day)
+        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetDaySchedule(int teacherID, int day)
         {
-            return GetWeekScheduleforTeacher(teacherID).FindAll(LLCG => TimeOfLesson.Parse(LLCG.Item1.timeslot).day == day);
+            return GetWeekSchedule(teacherID).FindAll(LLCG => TimeOfLesson.Parse(LLCG.Item1.timeslot).day == day);
         }
 
-        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetTodayScheduleforTeacher(int teacherID)
+        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetTodaySchedule(int teacherID)
         {
             var day = GetCurDayOfWeek();
             var week = GetCurrentWeek().type;
-            return GetWeekScheduleforTeacher(teacherID).FindAll(LLCG => { var tol = TimeOfLesson.Parse(LLCG.Item1.timeslot); return tol.day == day && (tol.week == -1 || tol.week == week); });
+            return GetWeekSchedule(teacherID).FindAll(LLCG => { var tol = TimeOfLesson.Parse(LLCG.Item1.timeslot); return tol.day == day && (tol.week == -1 || tol.week == week); });
         }
 
-        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetTomorrowScheduleforTeacher(int teacherID)
+        public static List<(Lesson, List<Curriculum>, List<TechGroup>)> GetTomorrowSchedule(int teacherID)
         {
             var day = GetNextDayOfWeek();
             var week = day != 0 ? GetCurrentWeek().type : GetCurrentWeek().reversedtype();
-            return GetWeekScheduleforTeacher(teacherID).FindAll(LLCG => { var tol = TimeOfLesson.Parse(LLCG.Item1.timeslot); return tol.day == day && (tol.week == -1 || tol.week == week); });
+            return GetWeekSchedule(teacherID).FindAll(LLCG => { var tol = TimeOfLesson.Parse(LLCG.Item1.timeslot); return tol.day == day && (tol.week == -1 || tol.week == week); });
         }
     }
 

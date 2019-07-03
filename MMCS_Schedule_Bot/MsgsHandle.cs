@@ -53,7 +53,7 @@ namespace ScheduleBot
                     var lst = ReturnTeachersId(msg.Text);
                     if (lst.Length == 1)
                     {
-                        Answer = LessonTechToStr(TeacherMethods.GetCurrentLessonforTeacher(lst[0].id), true);
+                        Answer = LessonTechToStr(TeacherMethods.GetCurrentLesson(lst[0].id), true);
                         UserList[msg.Chat.Id].ident = 3;
                     }
                     else if (lst.Length > 1)
@@ -67,13 +67,13 @@ namespace ScheduleBot
                         Answer = s;
                     }
                     else
-                     Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
+                        Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
                 }
                 else
                 {
                     if (int.TryParse(msg.Text, out int n) && n - 1 < NameMatches[msg.Chat.Id].Length && n - 1 >= 0)
                     {
-                        var LCG = TeacherMethods.GetCurrentLessonforTeacher(NameMatches[msg.Chat.Id][n - 1].id);
+                        var LCG = TeacherMethods.GetCurrentLesson(NameMatches[msg.Chat.Id][n - 1].id);
                         Answer = LessonTechToStr(LCG, true);
                         UserList[msg.Chat.Id].ident = 3;
                         NameMatches.Remove(msg.Chat.Id);
@@ -113,7 +113,7 @@ namespace ScheduleBot
                             if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
                                 Answer = LessonToStr(StudentMethods.GetCurrentLesson(UserList[msg.Chat.Id].groupid), true);
                             else
-                                Answer = LessonTechToStr(TeacherMethods.GetCurrentLessonforTeacher(UserList[msg.Chat.Id].teacherId), true);
+                                Answer = LessonTechToStr(TeacherMethods.GetCurrentLesson(UserList[msg.Chat.Id].teacherId), true);
                             break;
                         case "/findteacher":
                         case "найти преподавателя":
@@ -125,21 +125,21 @@ namespace ScheduleBot
                             if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
                                 Answer = WeekSchToStr(StudentMethods.GetWeekSchedule(UserList[msg.Chat.Id].groupid));
                             else
-                                Answer = WeekSchTechToStr(TeacherMethods.GetWeekScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
+                                Answer = WeekSchTechToStr(TeacherMethods.GetWeekSchedulee((UserList[msg.Chat.Id].teacherId));
                             break;
                         case "/today":
                         case "расписание на сегодня":
                             if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
                                 Answer = DaySchToStr(StudentMethods.GetTodaySchedule(UserList[msg.Chat.Id].groupid));
                             else
-                                Answer = DaySchTechToStr(TeacherMethods.GetTodayScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
+                                Answer = DaySchTechToStr(TeacherMethods.GetTodaySchedulee((UserList[msg.Chat.Id].teacherId));
                             break;
                         case "/tomorrow":
                         case "расписание на завтра":
                             if (UserList[msg.Chat.Id].Info != User.UserInfo.teacher)
                                 Answer = DaySchToStr(StudentMethods.GetTomorrowSchedule(UserList[msg.Chat.Id].groupid));
                             else
-                                Answer = DaySchTechToStr(TeacherMethods.GetTomorrowScheduleforTeacher(UserList[msg.Chat.Id].teacherId));
+                                Answer = DaySchTechToStr(TeacherMethods.GetTomorrowSchedulee((UserList[msg.Chat.Id].teacherId));
                             break;
                         case "/knowme":
                         case "знаешь меня?":
