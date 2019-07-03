@@ -65,7 +65,10 @@ namespace ScheduleBot
         /// </summary>
         static public List<Grade> GradeList = new List<Grade>();
 
-        static public Dictionary<int, (List<(Lesson, List<Curriculum>)>,DateTime)> GroupShedList = new Dictionary<int, (List<(Lesson, List<Curriculum>)>, DateTime)>();
+        /// <summary>
+        /// Cached student groups schedule
+        /// </summary>
+        static public Dictionary<int, (List<(Lesson, List<Curriculum>)>,DateTime)> GroupShedule = new Dictionary<int, (List<(Lesson, List<Curriculum>)>, DateTime)>();
 
         /// <summary>
         /// Bot instance to interact with Telegram
@@ -92,10 +95,14 @@ namespace ScheduleBot
         /// </summary>
         static void TeachersInit()
         {
-            var t = TeacherMethods.GetTeachersList();
-            foreach (Teacher x in t)
-                TeacherList.Add(x.id, x);
+            TeacherList = TeacherMethods.GetTeachersList().ToDictionary(t0 => t0.id);
             logger.Info("Список преподавателей получен.");
+
+            //Might take a few minutes to load them all
+            logger.Info($"Начата загрузка расписаний {TeacherList.Count} преподавателей.");
+            foreach (var teach in TeacherList)
+                TeacherSchedule[teach.Key] = (TeacherMethods.RequestWeekSchedule(teach.Key), DateTime.Now);
+            logger.Info($"Завершена загрузка расписаний {TeacherSchedule.Count} преподавателей.");
         }
 
         /// <summary>
@@ -116,7 +123,7 @@ namespace ScheduleBot
             logger.Info("Начата загрузка расписаний групп.");
             foreach (var grade in GradeList)
                 foreach (var group in grade.Groups)
-                    GroupShedList[group.id] = (StudentMethods.RequestWeekSchedule(group.id),DateTime.Now);
+                    GroupShedule[group.id] = (StudentMethods.RequestWeekSchedule(group.id),DateTime.Now);
             logger.Info("Завершена загрузка расписаний групп.");
         }
 

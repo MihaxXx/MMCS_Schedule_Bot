@@ -265,16 +265,16 @@ namespace API
         public static List<(Lesson, List<Curriculum>)> GetWeekSchedule(int groupID)
         {
             //if cached schedule is too old than request new
-            if (!ScheduleBot.Program.GroupShedList.ContainsKey(groupID) || DateTime.Now - ScheduleBot.Program.GroupShedList[groupID].Item2 > TimeSpan.FromHours(7*24))
+            if (!ScheduleBot.Program.GroupShedule.ContainsKey(groupID) || DateTime.Now - ScheduleBot.Program.GroupShedule[groupID].Item2 > TimeSpan.FromHours(7*24))
             {
                 try
-                { ScheduleBot.Program.GroupShedList[groupID] = (RequestWeekSchedule(groupID), DateTime.Now); }
+                { ScheduleBot.Program.GroupShedule[groupID] = (RequestWeekSchedule(groupID), DateTime.Now); }
                 catch (System.Net.WebException)
                 {
                     //TODO: logging
                 }
             }
-            return ScheduleBot.Program.GroupShedList[groupID].Item1;
+            return ScheduleBot.Program.GroupShedule[groupID].Item1;
         }
 
         /// <summary>
