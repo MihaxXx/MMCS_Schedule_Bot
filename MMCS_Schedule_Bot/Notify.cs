@@ -8,7 +8,7 @@ using Telegram.Bot.Types.Enums;
 using System.Threading.Tasks;
 
 using API;
-using Console_Schedule_Bot;
+using ScheduleBot;
 using Quartz;
 using Quartz.Impl;
 using NLog;
@@ -379,7 +379,7 @@ public class Notifier
 
             int curDay = CurrentSubject.GetCurDayOfWeek();
             // If user enable preLessonNotify after first lesson, we need to send tomorrow
-            var todayLessons = CurrentSubject.GetTodaySchedule(studentGroupID);
+            var todayLessons = StudentMethods.GetTodaySchedule(studentGroupID);
             if (!todayLessons.Any())
             {
                 logger.Info("Hasn't lessons today.");
@@ -477,7 +477,7 @@ public class Notifier
 
             int curDay = CurrentSubject.GetCurDayOfWeek();
             // If user enable preLessonNotify after first lesson, we need to send tomorrow
-            var todayLessons = CurrentSubject.GetTodayScheduleforTeacher(teacherID);
+            var todayLessons = TeacherMethods.GetTodayScheduleforTeacher(teacherID);
             if (!todayLessons.Any())
             {
                 logger.Info("No today lessons");
@@ -713,7 +713,7 @@ public class Notifier
         logger.Info($"Fetching next lessons for students.");
         foreach (int groupID in groupsIDs)
         {
-            var nextLesson = CurrentSubject.GetCurrentLesson(groupID);
+            var nextLesson = StudentMethods.GetCurrentLesson(groupID);
             nextLessons.Add(groupID, nextLesson);
         }
         logger.Info($"Fetched lessons for students : {nextLessons.Count}");
@@ -732,7 +732,7 @@ public class Notifier
         logger.Info($"Fetching next lessons for teachers.");
         foreach (User teacher in teachers)
         {
-            var nextLessonForTeacher = CurrentSubject.GetCurrentLessonforTeacher(teacher.teacherId);
+            var nextLessonForTeacher = TeacherMethods.GetCurrentLessonforTeacher(teacher.teacherId);
             nextLessonsForTeachers.Add(teacher.teacherId, nextLessonForTeacher);
         }
         logger.Info($"Fetched lessons for teachers : {nextLessonsForTeachers.Count}");

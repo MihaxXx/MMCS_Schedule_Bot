@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Console_Schedule_Bot
+namespace ScheduleBot
 {
     class User
     {

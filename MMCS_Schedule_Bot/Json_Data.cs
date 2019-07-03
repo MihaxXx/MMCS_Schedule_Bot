@@ -5,7 +5,7 @@ using System.IO;
 using Newtonsoft.Json;
 using NLog;
  
-namespace Console_Schedule_Bot
+namespace ScheduleBot
 {
     public class Json_Data
     {

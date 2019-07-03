@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.IO;
 using System.Threading;
-using static System.Console;
 using NLog;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -19,7 +18,7 @@ using Telegram.Bot.Types.Enums;
 using API;
 using Notify;
 
-namespace Console_Schedule_Bot
+namespace ScheduleBot
 {
 
     partial class Program
@@ -40,7 +39,7 @@ namespace Console_Schedule_Bot
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
             Scheduler.RunNotifier().GetAwaiter().GetResult();
             logger.Info("Ожидает сообщений...");
-            CancelKeyPress += OnExit;
+            Console.CancelKeyPress += OnExit;
             _closing.WaitOne();
         }
 
@@ -112,7 +111,7 @@ namespace Console_Schedule_Bot
             logger.Info("Начата загрузка расписаний групп.");
             foreach (var grade in GradeList)
                 foreach (var group in grade.Groups)
-                    GroupShedList[group.id] = (CurrentSubject.UpdateWeekSchedule(group.id),DateTime.Now);
+                    GroupShedList[group.id] = (StudentMethods.UpdateWeekSchedule(group.id),DateTime.Now);
             logger.Info("Завершена загрузка расписаний групп.");
         }
 
