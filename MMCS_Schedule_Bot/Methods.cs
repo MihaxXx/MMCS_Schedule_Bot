@@ -163,7 +163,7 @@ namespace API
         public static int GetNextDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 7) % 7;
 
         /// <summary>
-        /// Returns current week
+        /// Get current week (cached)
         /// </summary>
         /// <returns></returns>
         public static Week GetCurrentWeek()
@@ -226,7 +226,7 @@ namespace API
         }
 
         /// <summary> 
-        /// Gets nearest Lesson for the Teacher 
+        /// Get nearest Lesson for the Teacher 
         /// </summary> 
         /// <param name="teacherID"></param> 
         /// <returns></returns> 
@@ -250,7 +250,7 @@ namespace API
             }
         }
 		/// <summary>
-		/// Comparison(Lesson, List of Curriculum)
+		/// Comparison (Lesson, List of Curriculum) by day of week and time
 		/// </summary>
 		/// <param name="llc1"></param>
 		/// <param name="llc2"></param>
@@ -261,12 +261,12 @@ namespace API
 			var tol2 = TimeOfLesson.Parse(llc2.Item1.timeslot);
 			return (tol1.day * 24 + tol1.starth * 60 + tol1.startm) - (tol2.day * 24 + tol2.starth * 60 + tol2.startm);
 		}
-		/// <summary>
-		/// Ordered Week Schedule
-		/// </summary>
-		/// <param name="groupID"></param>
-		/// <returns></returns>
-		public static List<(Lesson, List<Curriculum>)> UpdateWeekSchedule(int groupID)
+        /// <summary>
+        /// Request week schedule for <paramref name="groupID"/>
+        /// </summary>
+        /// <param name="groupID"></param>
+        /// <returns>Ordered by day of week and time week schedule</returns>
+        public static List<(Lesson, List<Curriculum>)> UpdateWeekSchedule(int groupID)
 		{
 			string url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + groupID;
 			string response = SchRequests.SchRequests.Request(url);
@@ -280,7 +280,11 @@ namespace API
 			res.Sort(CmpLLCByDayAndTime);
 			return res;
 		}
-
+        /// <summary>
+		/// Get week schedule for <paramref name="groupID"/> (cached)
+		/// </summary>
+		/// <param name="groupID"></param>
+		/// <returns>Ordered by day of week and time week schedule</returns>
         public static List<(Lesson, List<Curriculum>)> GetWeekSchedule(int groupID)
         {
             //if cached schedule is too old than request new
