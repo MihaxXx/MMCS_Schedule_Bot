@@ -23,6 +23,10 @@ namespace ScheduleBot
 
     partial class Program
     {
+        /// <summary>
+        /// "-nopreload" - prevents loading shedules on start
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
             Json_Data.ReadData();
@@ -98,11 +102,14 @@ namespace ScheduleBot
             TeacherList = TeacherMethods.GetTeachersList().ToDictionary(t0 => t0.id);
             logger.Info("Список преподавателей получен.");
 
-            //Might take a few minutes to load them all
-            logger.Info($"Начата загрузка расписаний {TeacherList.Count} преподавателей.");
-            foreach (var teach in TeacherList)
-                TeacherSchedule[teach.Key] = (TeacherMethods.RequestWeekSchedule(teach.Key), DateTime.Now);
-            logger.Info($"Завершена загрузка расписаний {TeacherSchedule.Count} преподавателей.");
+            if (!(Environment.GetCommandLineArgs().Length > 1 && Environment.GetCommandLineArgs()[1] == "-nopreload"))
+            {
+                //Might take a few minutes to load them all
+                logger.Info($"Начата загрузка расписаний {TeacherList.Count} преподавателей.");
+                foreach (var teach in TeacherList)
+                    TeacherSchedule[teach.Key] = (TeacherMethods.RequestWeekSchedule(teach.Key), DateTime.Now);
+                logger.Info($"Завершена загрузка расписаний {TeacherSchedule.Count} преподавателей.");
+            }
         }
 
         /// <summary>
@@ -120,11 +127,14 @@ namespace ScheduleBot
 
         static void GroupShedListInit()
         {
-            logger.Info("Начата загрузка расписаний групп.");
-            foreach (var grade in GradeList)
-                foreach (var group in grade.Groups)
-                    GroupShedule[group.id] = (StudentMethods.RequestWeekSchedule(group.id),DateTime.Now);
-            logger.Info("Завершена загрузка расписаний групп.");
+            if (!(Environment.GetCommandLineArgs().Length > 1 && Environment.GetCommandLineArgs()[1] == "-nopreload"))
+            {
+                logger.Info("Начата загрузка расписаний групп.");
+                foreach (var grade in GradeList)
+                    foreach (var group in grade.Groups)
+                        GroupShedule[group.id] = (StudentMethods.RequestWeekSchedule(group.id), DateTime.Now);
+                logger.Info("Завершена загрузка расписаний групп.");
+            }
         }
 
         /// <summary>
