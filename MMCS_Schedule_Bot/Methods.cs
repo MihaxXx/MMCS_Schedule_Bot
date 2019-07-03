@@ -168,16 +168,13 @@ namespace API
         /// <returns></returns>
         public static Week GetCurrentWeek()
         {
-            string url = "http://schedule.sfedu.ru/APIv0/time/week/";
-            string response = SchRequests.SchRequests.Request(url);
-			Week week = SchRequests.SchRequests.DeSerializationObjFromStr<Week>(response);
-            return week; 
+            return TimeOfLesson.curWeek;
         }
         /// <summary>
         /// Request current week
         /// </summary>
         /// <returns></returns>
-        public static Week GetCurrentWeekFromAPI()
+        public static Week UpdateCurrentWeek()
         {
             string url = "http://schedule.sfedu.ru/APIv0/time/week/";
             string response = SchRequests.SchRequests.Request(url);
@@ -269,7 +266,7 @@ namespace API
 		/// </summary>
 		/// <param name="groupID"></param>
 		/// <returns></returns>
-		public static List<(Lesson, List<Curriculum>)> GetWeekSchedule(int groupID)
+		public static List<(Lesson, List<Curriculum>)> UpdateWeekSchedule(int groupID)
 		{
 			string url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + groupID;
 			string response = SchRequests.SchRequests.Request(url);
@@ -284,13 +281,28 @@ namespace API
 			return res;
 		}
 
-		/// <summary>
-		/// Ordered <paramref name="day"/> schedule
-		/// </summary>
-		/// <param name="groupID"></param>
-		/// <param name="day">Day of week, 0..6</param>
-		/// <returns></returns>
-		public static List<(Lesson, List<Curriculum>)> GetDaySchedule(int groupID, int day)
+        public static List<(Lesson, List<Curriculum>)> GetWeekSchedule(int groupID)
+        {
+            //if cached schedule is too old than request new
+            if (!Console_Schedule_Bot.Program.GroupShedList.ContainsKey(groupID) || DateTime.Now - Console_Schedule_Bot.Program.GroupShedList[groupID].Item2 > TimeSpan.FromHours(7*24))
+            {
+                try
+                { Console_Schedule_Bot.Program.GroupShedList[groupID] = (UpdateWeekSchedule(groupID), DateTime.Now); }
+                catch (System.Net.WebException)
+                {
+                    //TODO: logging
+                }
+            }
+            return Console_Schedule_Bot.Program.GroupShedList[groupID].Item1;
+        }
+
+        /// <summary>
+        /// Ordered <paramref name="day"/> schedule
+        /// </summary>
+        /// <param name="groupID"></param>
+        /// <param name="day">Day of week, 0..6</param>
+        /// <returns></returns>
+        public static List<(Lesson, List<Curriculum>)> GetDaySchedule(int groupID, int day)
 		{
 			return GetWeekSchedule(groupID).FindAll(LLC => TimeOfLesson.Parse(LLC.Item1.timeslot).day == day);
 		}

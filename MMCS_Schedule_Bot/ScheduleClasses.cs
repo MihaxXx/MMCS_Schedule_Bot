@@ -168,7 +168,7 @@ namespace API
 		// Уровень группы
 		public int gradeid { get; set; }
 
-		public void Print()
+        public void Print()
 		{
 			Console.WriteLine($"id: {id}, имя: {name}, номер: {num}, gradeid: {gradeid}");
 		}
@@ -257,6 +257,8 @@ namespace API
         // Учёная степень
         public string degree { get; set; }
 
+        List<(Lesson, List<Curriculum>, List<TechGroup>)> schedule { get; set; }
+
         /// Конструктор
         Teacher(int id, string name, string degree)
         {
@@ -296,7 +298,7 @@ namespace API
         public string degree { get; set; }
 
         // Список групп
-        public Group[] Groups { get; set; }
+        public List<Group> Groups { get; set; }
 
         // Конструктор
         Grade(int id, int num, string degree)

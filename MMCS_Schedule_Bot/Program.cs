@@ -30,6 +30,7 @@ namespace Console_Schedule_Bot
             KeyboardInit();
             TeachersInit();
             GradeInit();
+            GroupShedListInit();
             GetElectives();
 
             BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
@@ -58,7 +59,9 @@ namespace Console_Schedule_Bot
         /// <summary>
         /// List of grades
         /// </summary>
-        static public Grade[] GradeList;
+        static public List<Grade> GradeList = new List<Grade>();
+
+        static public Dictionary<int, (List<(Lesson, List<Curriculum>)>,DateTime)> GroupShedList = new Dictionary<int, (List<(Lesson, List<Curriculum>)>, DateTime)>();
 
         /// <summary>
         /// Bot instance to interact with Telegram
@@ -96,12 +99,21 @@ namespace Console_Schedule_Bot
         /// </summary>
         static void GradeInit()
         {
-            GradeList = GradeMethods.GetGradesList();
-            for (int i = 0; i < GradeList.Length; i++)
+            GradeList = GradeMethods.GetGradesList().ToList();
+            for (int i = 0; i < GradeList.Count; i++)
             {
-                GradeList[i].Groups = GradeMethods.GetGroupsList(GradeList[i].id);
+                GradeList[i].Groups = GradeMethods.GetGroupsList(GradeList[i].id).ToList();
             }
             logger.Info("Список курсов получен.");
+        }
+
+        static void GroupShedListInit()
+        {
+            logger.Info("Начата загрузка расписаний групп.");
+            foreach (var grade in GradeList)
+                foreach (var group in grade.Groups)
+                    GroupShedList[group.id] = (CurrentSubject.UpdateWeekSchedule(group.id),DateTime.Now);
+            logger.Info("Завершена загрузка расписаний групп.");
         }
 
         /// <summary>
