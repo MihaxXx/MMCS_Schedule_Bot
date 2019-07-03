@@ -206,21 +206,17 @@ namespace API
 			return l;
 		}
 		/// <summary>
-		/// Gets nearest Lesson and it's curriculum
+		/// Get next Lesson and it's curriculum (cached)
 		/// </summary>
 		/// <param name="groupID"></param>
 		/// <returns></returns>
 		public static (Lesson,List<Curriculum>) GetCurrentLesson(int groupID)
         {
-            string url = "http://schedule.sfedu.ru/APIv0/schedule/group/" + groupID;
-            string response = SchRequests.SchRequests.Request(url);
-			SchOfGroup schedule = SchRequests.SchRequests.DeSerializationObjFromStr<SchOfGroup>(response);
-			if (schedule.lessons.Count > 0)
+            var schedule = GetWeekSchedule(groupID);
+            if (schedule.Count > 0)
 			{
                 var cur_week = GetCurrentWeek();
-				var l_res = schedule.lessons.OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.timeslot),cur_week)).First();
-				var c_res = schedule.curricula.FindAll(c => c.lessonid == l_res.id);
-				return (l_res, c_res);
+                return GetWeekSchedule(groupID).OrderBy(l1 => TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(l1.Item1.timeslot), cur_week)).First();
 			}
             return (new Lesson(),new List<Curriculum>());  
         }
