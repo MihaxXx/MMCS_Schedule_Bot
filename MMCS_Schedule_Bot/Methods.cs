@@ -197,18 +197,10 @@ namespace API
     public static class StudentMethods
     {
         /// <summary>
-        /// Gets Schedule GroupID by <paramref name="course"/> and <paramref name="group"/>
+        /// String representation (grade, program, course.group) for students groupID
         /// </summary>
-        /// <param name="course"></param>
-        /// <param name="group"></param>
-        /// <returns>GroupID</returns>
-        public static int CourseGroupToID(int course, int group)
-		{
-			string response1 = SchRequests.SchRequests.Request("http://schedule.sfedu.ru/APIv0/group/list/"+ course);
-			Group[] lstOfGroups = SchRequests.SchRequests.DeSerializationFromStr<Group>(response1);
-			return lstOfGroups.Where(g => (g.num == group)).First().id;
-		}
-
+        /// <param name="groupID"></param>
+        /// <returns></returns>
         public static string groupIDToCourseGroup(int groupID)
         {
             var grade = ScheduleBot.Program.GradeList.Find(grad => grad.Groups.Any(group => group.id == groupID));
