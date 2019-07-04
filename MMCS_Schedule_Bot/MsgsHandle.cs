@@ -133,11 +133,10 @@ namespace ScheduleBot
                             break;
                         case "/knowme":
                         case "знаешь меня?":
-
                             if (UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
-                                Answer = $"Да, вы {TeacherList[UserList[msg.Chat.Id].teacherId].name}, Id = {TeacherList[UserList[msg.Chat.Id].teacherId].id}";     //TODO: Убрать вывод ID; База старая, так что выводим только ФИО!!!
+                                Answer = $"Вы {TeacherList[UserList[msg.Chat.Id].teacherId].name}";     //База старая, так что выводим только ФИО!!!
                             else
-                                Answer = "Да, ты " + UserList[msg.Chat.Id].id.ToString();
+                                Answer = $"Вы {msg.Chat.FirstName} из группы {StudentMethods.groupIDToCourseGroup(UserList[msg.Chat.Id].groupid)}";
                             break;
 
                         case "/eveningnotify":
@@ -155,10 +154,9 @@ namespace ScheduleBot
 
                         case "/forget":
                         case "забудь меня":
-                            //UserList[msg.Chat.Id].ident = 0;
                             UserList.Remove(msg.Chat.Id);
                             Json_Data.WriteData();
-                            Answer = "Я тебя забыл! Для повторной регистрации пиши /start";
+                            Answer = "Я вас забыл! Для повторной регистрации пиши /start";
                             await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: new ReplyKeyboardRemove());
                             return;
 
@@ -483,7 +481,7 @@ namespace ScheduleBot
 /week — расписание на неделю
 /findteacher — поиск преподавателя
 /info — краткое описание бота    
-/knowme — показать ваш id
+/knowme — информация о пользователе
 /eveningNotify — настроить вечернее уведомление
 /preLessonNotify — настроить уведомление за 15 минут до первой пары
 /optionalcourses — информация о факультативах
@@ -491,7 +489,7 @@ namespace ScheduleBot
 /forget — сменить пользователя
 /help — список команд";
 
-        static string StuDegreeShort(string degree)
+        public static string StuDegreeShort(string degree)
         {
             switch (degree)
             {

@@ -208,6 +208,14 @@ namespace API
 			Group[] lstOfGroups = SchRequests.SchRequests.DeSerializationFromStr<Group>(response1);
 			return lstOfGroups.Where(g => (g.num == group)).First().id;
 		}
+
+        public static string groupIDToCourseGroup(int groupID)
+        {
+            var grade = ScheduleBot.Program.GradeList.Find(grad => grad.Groups.Any(group => group.id == groupID));
+            var grup = grade.Groups.Find(group => group.id == groupID);
+            return $"{ScheduleBot.Program.StuDegreeShort(grade.degree)} {grup.name} {grade.num}.{grup.num}";
+        }
+
 		/// <summary>
 		/// Get next Lesson and it's curriculum (cached)
 		/// </summary>
