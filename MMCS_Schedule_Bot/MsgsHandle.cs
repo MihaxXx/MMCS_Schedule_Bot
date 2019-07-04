@@ -175,7 +175,7 @@ namespace ScheduleBot
                         case "факультативы":
                             Answer = electivesStr;
                             break;
-                        case "/currweek":
+                        case "/curweek":
                             Answer = $"Сейчас *{CurrentSubject.GetCurrentWeek().ToString()}* неделя.";
                             break;
                         default:
@@ -477,7 +477,7 @@ namespace ScheduleBot
 /eveningNotify — настроить вечернее уведомление
 /preLessonNotify — настроить уведомление за 15 минут до первой пары
 /optionalcourses — информация о факультативах
-/currweek — текущая неделя
+/curweek — текущая неделя
 /forget — сменить пользователя
 /help — список команд";
 
