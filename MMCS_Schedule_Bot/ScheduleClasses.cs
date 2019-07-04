@@ -26,11 +26,6 @@ namespace API
         // Время предмета
         public string timeslot { get; set; }
 
-        public void Print()
-        {
-            Console.WriteLine($"{id} {uberid} {subcount} {timeslot}");
-        }
-
 		public override string ToString()
 		{
 			return $"{id} {uberid} {subcount} {timeslot}";
@@ -86,11 +81,6 @@ namespace API
         // Наименование аудитории
         public string roomname { get; set; }
 
-        public void Print()
-        {
-            Console.WriteLine($"{subjectname}, преп. {teachername}, ауд. {roomname}");
-        }
-
 		public override string ToString()
 		{
 			return $"{subjectname}, преп. {teachername}, ауд. {roomname}";
@@ -110,14 +100,6 @@ namespace API
         [DataMember] 
         // Список расписаний 
         public List<Curriculum> curricula { get; set; }
-
-        public void Print()
-        {
-            foreach (Lesson lesson in lessons)
-                lesson.Print();
-            foreach (Curriculum cur in curricula)
-                cur.Print();
-        }
     }
 
     /// <summary>
@@ -136,15 +118,6 @@ namespace API
         [DataMember]
         //список групп
         public List<TechGroup> groups { get; set; }
-        public void Print()
-        {
-            foreach (var lesson in lessons)
-                lesson.Print();
-            foreach (var cur in curricula)
-                cur.Print();
-            foreach (var gr in groups)
-                gr.Print();
-        }
     }
 	/// <summary>
 	/// Группа
@@ -167,11 +140,6 @@ namespace API
 		[DataMember]
 		// Уровень группы
 		public int gradeid { get; set; }
-
-        public void Print()
-		{
-			Console.WriteLine($"id: {id}, имя: {name}, номер: {num}, gradeid: {gradeid}");
-		}
 	}
 
 	/// <summary>
@@ -216,13 +184,6 @@ namespace API
 		}
 		// Конструктор по умолчанию
 		Subject() { }
-		/// <summary>
-		/// Метод печати класса дисциплины
-		/// </summary>
-		public void Print()
-		{
-			Console.WriteLine($"id: {id}, предмет: {name} ({abbr})");
-		}
 	}
 	/// <summary>
 	/// Информация о конкретном предмете по его номеру ID
@@ -268,11 +229,6 @@ namespace API
         // Конструктор по умолчанию
         Teacher() { }
 
-        public void Print()
-        {
-            Console.WriteLine($"{id}, {name}, {degree}");
-        }
-
         public override string ToString()
         {
             return $"{id}, {name}, {degree}";
@@ -309,11 +265,6 @@ namespace API
         // Конструктор по умолчанию
         Grade() { }
 
-        public void Print()
-        {
-            Console.WriteLine($"{id}, {num}, {degree}");
-        }
-
         public override string ToString()
         {
             return $"{id}, {degree}";
@@ -339,11 +290,6 @@ namespace API
 
 		[DataMember]
 		public string name { get; set; }
-
-		public void Print()
-		{
-			Console.WriteLine($"{uberid}, {groupnum}, {gradenum}, {degree}, {name}");
-		}
 
 		public override string ToString()
 		{
