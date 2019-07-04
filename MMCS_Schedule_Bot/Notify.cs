@@ -43,14 +43,7 @@ namespace Notify
         public static Task ResetWeekType()
         {
 
-            var task = Task.Factory.StartNew(() =>
-            {
-                logger.Info("Updating curWeek...");
-                logger.Info($"Cur week setting: {TimeOfLesson.curWeek}");
-                Week curWeek = CurrentSubject.RequestCurrentWeek();
-                TimeOfLesson.curWeek = curWeek;
-                logger.Info($"Cur week after setting: {TimeOfLesson.curWeek}");
-            });
+            var task = Task.Factory.StartNew(Program.WeekInit);
             return task;
 
         }
@@ -106,12 +99,13 @@ namespace Notify
 
             ITrigger resetWeekTypeTrigger = TriggerBuilder.Create()
                 .WithIdentity("resetWeekType")
-                .WithCronSchedule($"0 30 0 ? * MON *")
+                .WithCronSchedule($"0 1 0 ? * MON *")
                 .ForJob(resetWeekType)
                 .Build();
 
             await scheduler.ScheduleJob(resetWeekType, resetWeekTypeTrigger);
 
+            //TODO: Impl load from API
             var lessons = new Dictionary<(int, int), string>
             {
                 { (7, 44), "first" },

@@ -26,7 +26,11 @@ namespace ScheduleBot
             KeyboardInit();
             TeachersInit();
             GradeInit();
-            GroupShedListInit();
+            if (!(Environment.GetCommandLineArgs().Length > 1 && Environment.GetCommandLineArgs()[1] == "-nopreload"))
+            {
+                TeachersShedInit();
+                GroupShedListInit();
+            }
             GetElectives();
 
             BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
@@ -36,6 +40,7 @@ namespace ScheduleBot
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
             Scheduler.RunNotifier().GetAwaiter().GetResult();
             logger.Info("Ожидает сообщений...");
+
             Console.CancelKeyPress += OnExit;
             _closing.WaitOne();
         }
@@ -94,15 +99,23 @@ namespace ScheduleBot
         {
             TeacherList = TeacherMethods.GetTeachersList().ToDictionary(t0 => t0.id);
             logger.Info("Список преподавателей получен.");
+        }
+        static void TeachersShedInit()
+        {
+            //Might take a few minutes to load them all
+            logger.Info($"Начата загрузка расписаний {TeacherList.Count} преподавателей.");
+            foreach (var teach in TeacherList)
+                TeacherSchedule[teach.Key] = (TeacherMethods.RequestWeekSchedule(teach.Key), DateTime.Now);
+            logger.Info($"Завершена загрузка расписаний {TeacherSchedule.Count} преподавателей.");
+        }
 
-            if (!(Environment.GetCommandLineArgs().Length > 1 && Environment.GetCommandLineArgs()[1] == "-nopreload"))
-            {
-                //Might take a few minutes to load them all
-                logger.Info($"Начата загрузка расписаний {TeacherList.Count} преподавателей.");
-                foreach (var teach in TeacherList)
-                    TeacherSchedule[teach.Key] = (TeacherMethods.RequestWeekSchedule(teach.Key), DateTime.Now);
-                logger.Info($"Завершена загрузка расписаний {TeacherSchedule.Count} преподавателей.");
-            }
+        public static void WeekInit()
+        {
+            logger.Info("Updating curWeek...");
+            logger.Info($"Cur week setting: {TimeOfLesson.curWeek}");
+            Week curWeek = CurrentSubject.RequestCurrentWeek();
+            TimeOfLesson.curWeek = curWeek;
+            logger.Info($"Cur week after setting: {TimeOfLesson.curWeek}");
         }
 
         /// <summary>
@@ -120,14 +133,11 @@ namespace ScheduleBot
 
         static void GroupShedListInit()
         {
-            if (!(Environment.GetCommandLineArgs().Length > 1 && Environment.GetCommandLineArgs()[1] == "-nopreload"))
-            {
                 logger.Info("Начата загрузка расписаний групп.");
                 foreach (var grade in GradeList)
                     foreach (var group in grade.Groups)
                         GroupShedule[group.id] = (StudentMethods.RequestWeekSchedule(group.id), DateTime.Now);
                 logger.Info("Завершена загрузка расписаний групп.");
-            }
         }
 
         /// <summary>

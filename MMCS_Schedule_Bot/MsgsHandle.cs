@@ -178,6 +178,16 @@ namespace ScheduleBot
                         case "/curweek":
                             Answer = $"Сейчас *{CurrentSubject.GetCurrentWeek().ToString()}* неделя.";
                             break;
+                        case "/forceupdate":
+                            logger.Info($"Запрошено принудительное обновление расписаний, ID: {msg.Chat.Id}, @{msg.Chat.Username}.");
+                            TeachersInit();
+                            GradeInit();
+                            GroupShedListInit();
+                            TeachersShedInit();
+                            WeekInit();
+                            logger.Info($"Завершено принудительное обновление расписаний, ID: {msg.Chat.Id}, @{msg.Chat.Username}.");
+                            Answer = "Данные расписаний обновлены!";
+                            break;
                         default:
                             Answer = "Введены неверные данные, повторите попытку.";
                             break;
