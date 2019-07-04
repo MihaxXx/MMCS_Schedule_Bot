@@ -195,7 +195,7 @@ namespace ScheduleBot
                 }
                 catch (System.Net.WebException e)
                 {
-                    WriteLine("Catched exeption:\n" + e.Message);
+                    logger.Error(e, "Catched exeption:");
                     Answer = "Ошибка! Вероятно, сервер интерактивного расписания недоступен. Пожалуйста, попробуйте повторить запрос позднее.";
                 }
             }
@@ -264,7 +264,7 @@ namespace ScheduleBot
                 var lst = s.Split('.').ToArray();
                 if (lst[0] == String.Empty || lst[1] == String.Empty || lst.Length > 2 || lst.Length < 1)
                 {
-                    WriteLine("Ошибка ввода!");
+                    logger.Info($"ID: {id}, IsCourseGroup(\"{s}\") - Ошибка ввода!");
                     return false;
                 }
                 var (course, group) = (-1, -1);
@@ -272,7 +272,7 @@ namespace ScheduleBot
                 bool IsGroup = int.TryParse(lst[1], out group);
                 if (!IsCourse || !IsGroup)
                 {
-                    WriteLine("Ошибка парсинга!");
+                    logger.Info($"ID: {id}, IsCourseGroup(\"{s}\") - Ошибка парсинга!");
                     return false;
                 }
                 int groupid = 0;
@@ -293,7 +293,7 @@ namespace ScheduleBot
             }
             catch (Exception e)
             {
-                WriteLine("Ошибка: " + e.Message);
+                logger.Info(e, $"ID: {id}, IsCourseGroup(\"{s}\") - Исключение!");
                 return false;
             }
         }
@@ -334,7 +334,7 @@ namespace ScheduleBot
                     {
                         UserList[msg.Chat.Id].id = msg.Chat.Id;      //Запись айди
 
-                        WriteLine("Записал ID: " + msg.Chat.Id.ToString());
+                        logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: иницирована.");
 
                         Answer = "Вы бакалавр, магистр, аспирант или преподаватель?";
                         UserList[msg.Chat.Id].ident++;
@@ -348,7 +348,7 @@ namespace ScheduleBot
                         UserList[msg.Chat.Id].Info = User.UserInfo.graduate; //Запись данных
                         Answer = "Напиши номер курса и группы через точку. (x.x)";
 
-                        WriteLine("Записал тип пользователя: " + msg.Text);
+                        logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: записан тип пользователя - {UserList[msg.Chat.Id].Info.ToString()}.");
 
                         UserList[msg.Chat.Id].ident++;
                     }
@@ -361,7 +361,7 @@ namespace ScheduleBot
                         UserList[msg.Chat.Id].Info = User.UserInfo.bachelor;  //Запись данных
                         Answer = "Напиши номер курса и группы через точку. (x.x)";
 
-                        WriteLine("Записал тип пользователя:" + msg.Text);
+                        logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: записан тип пользователя - {UserList[msg.Chat.Id].Info.ToString()}.");
 
                         UserList[msg.Chat.Id].ident++;
                     }
@@ -375,7 +375,7 @@ namespace ScheduleBot
                         UserList[msg.Chat.Id].Info = User.UserInfo.master;  //Запись данных
                         Answer = "Напиши номер курса и группы через точку. (x.x)";
 
-                        WriteLine("Записал тип пользователя: " + msg.Text);
+                        logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: записан тип пользователя - {UserList[msg.Chat.Id].Info.ToString()}.");
 
                         UserList[msg.Chat.Id].ident++;
                     }
@@ -388,7 +388,7 @@ namespace ScheduleBot
                         UserList[msg.Chat.Id].Info = User.UserInfo.teacher;  //Запись данных
                         Answer = "Введите вашу фамилию.";
 
-                        WriteLine("Записал тип пользователя: " + msg.Text);
+                        logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: записан тип пользователя - {UserList[msg.Chat.Id].Info.ToString()}.");
 
                         UserList[msg.Chat.Id].ident++;
                     }
@@ -409,7 +409,7 @@ namespace ScheduleBot
                             if (lst.Length == 1)
                             {
                                 UserList[msg.Chat.Id].teacherId = lst[0].id;
-                                WriteLine("Преподаватель зареган");
+                                logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: завершена - {UserList[msg.Chat.Id].Info.ToString()} (teacherID {UserList[msg.Chat.Id].teacherId}).");
                                 Answer = "Вы получили доступ к функционалу.\n" + _help;
                                 UserList[msg.Chat.Id].ident++;
 
@@ -432,7 +432,7 @@ namespace ScheduleBot
                             if (int.TryParse(msg.Text, out int n) && n - 1 < NameMatches[msg.Chat.Id].Length && n - 1 >= 0)
                             {
                                 UserList[msg.Chat.Id].teacherId = NameMatches[msg.Chat.Id][n - 1].id;
-                                WriteLine("Преподаватель зареган");
+                                logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: завершена - {UserList[msg.Chat.Id].Info.ToString()} (teacherID {UserList[msg.Chat.Id].teacherId}).");
                                 Answer = "Вы получили доступ к функционалу.\n" + _help;
                                 UserList[msg.Chat.Id].ident++;
                                 NameMatches.Remove(msg.Chat.Id);
@@ -453,7 +453,7 @@ namespace ScheduleBot
                             Answer = "Вы получили доступ к функционалу.\n" + _help;
                             Json_Data.WriteData();
 
-                            WriteLine("Регистрация завершена!");
+                            logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: завершена - {UserList[msg.Chat.Id].Info.ToString()} (groupID {UserList[msg.Chat.Id].id}).");
                         }
                         else
                         {
