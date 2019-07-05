@@ -48,7 +48,6 @@ namespace ScheduleBot
                     }
                     else if (lst.Length > 1)
                     {
-                        //TODO: It would be more efficient to use StringBuilder here
                         NameMatches.Add(msg.Chat.Id, lst);
                         var s = $"Найдено несколько совпадений:\n";
                         for (var i = 0; i < lst.Length; i++)
@@ -257,39 +256,39 @@ namespace ScheduleBot
         /// <returns></returns>
         static bool IsCourseGroup(long id, string s)
         {
-            try
-            {
-                var lst = s.Split('.').ToArray();
-                if (lst[0] == String.Empty || lst[1] == String.Empty || lst.Length > 2 || lst.Length < 1)
-                {
-                    logger.Info($"ID: {id}, IsCourseGroup(\"{s}\") - Ошибка ввода!");
-                    return false;
-                }
-                var (course, group) = (-1, -1);
-                bool IsCourse = int.TryParse(lst[0], out course);
-                bool IsGroup = int.TryParse(lst[1], out group);
-                if (!IsCourse || !IsGroup)
-                {
-                    logger.Info($"ID: {id}, IsCourseGroup(\"{s}\") - Ошибка парсинга!");
-                    return false;
-                }
-                int groupid = 0;
+			var lst = s.Split('.');
+			if (lst.Length != 2 || lst[0] == String.Empty || lst[1] == String.Empty)
+			{
+				logger.Info($"ID: {id}, IsCourseGroup(\"{s}\") - Ошибка ввода!");
+				return false;
+			}
+			var (course, group) = (-1, -1);
+			bool IsCourse = int.TryParse(lst[0], out course);
+			bool IsGroup = int.TryParse(lst[1], out group);
+			if (!IsCourse || !IsGroup)
+			{
+				logger.Info($"ID: {id}, IsCourseGroup(\"{s}\") - Ошибка парсинга!");
+				return false;
+			}
+			try
+			{
+				int groupid = 0;
                 switch (UserList[id].Info)
                 {
                     case User.UserInfo.bachelor:
-                        groupid = GradeList.Where(y => y.degree == "bachelor" && y.num == course).First().Groups.Where(y => y.num == group).First().id;
+                        groupid = GradeList.Find(y => y.degree == "bachelor" && y.num == course).Groups.Find(y => y.num == group).id;
                         break;
                     case User.UserInfo.graduate:
-                        groupid = GradeList.Where(y => y.degree == "postgraduate" && y.num == course).First().Groups.Where(y => y.num == group).First().id;
+                        groupid = GradeList.Find(y => y.degree == "postgraduate" && y.num == course).Groups.Find(y => y.num == group).id;
                         break;
                     case User.UserInfo.master:
-                        groupid = GradeList.Where(y => y.degree == "master" && y.num == course).First().Groups.Where(y => y.num == group).First().id;
+                        groupid = GradeList.Find(y => y.degree == "master" && y.num == course).Groups.Find(y => y.num == group).id;
                         break;
                 }
                 UserList[id].groupid = groupid;
                 return true;
             }
-            catch (Exception e)
+            catch (NullReferenceException e)
             {
                 logger.Info(e, $"ID: {id}, IsCourseGroup(\"{s}\") - Исключение!");
                 return false;
@@ -319,7 +318,6 @@ namespace ScheduleBot
         /// <returns></returns>
         static string Registration(Telegram.Bot.Types.Message msg)
         {
-            //TODO: Get rid of all String.Empty and "" because they can lead to exeption
             //TODO: Replace switch by msg to switch by user.ident
             string Answer = "Введены неверные данные, повторите попытку.";
 
@@ -451,7 +449,7 @@ namespace ScheduleBot
                             Answer = "Вы получили доступ к функционалу.\n" + _help;
                             Json_Data.WriteData();
 
-                            logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: завершена - {UserList[msg.Chat.Id].Info.ToString()} (groupID {UserList[msg.Chat.Id].id}).");
+                            logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: завершена - {UserList[msg.Chat.Id].Info.ToString()} (groupID {UserList[msg.Chat.Id].groupid}).");
                         }
                         else
                         {
@@ -559,7 +557,6 @@ namespace ScheduleBot
         /// <returns></returns>
         static string WeekSchToStr(List<(Lesson, List<Curriculum>)> ws)
         {
-            //TODO: StringBuilder
             string res = String.Empty;
             if (ws.Count > 0)
             {
@@ -629,7 +626,6 @@ namespace ScheduleBot
         /// <returns></returns>
         static string WeekSchTechToStr(List<(Lesson, List<Curriculum>, List<TechGroup>)> ws)
         {
-            //TODO: StringBuilder
             string res = String.Empty;
             if (ws.Count > 0)
             {
