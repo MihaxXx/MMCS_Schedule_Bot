@@ -95,25 +95,61 @@ namespace ScheduleBot
         /// <summary>
         /// Gets list of techers
         /// </summary>
-        static void TeachersInit()
+        static void TeachersInit(bool onstart = true)
         {
-            TeacherList = TeacherMethods.GetTeachersList().ToDictionary(t0 => t0.id);
-            logger.Info("Список преподавателей получен.");
+            try
+            {
+                TeacherList = TeacherMethods.GetTeachersList().ToDictionary(t0 => t0.id);
+                logger.Info("Список преподавателей получен.");
+            }
+            catch (System.Net.WebException e)
+            {
+                if (onstart)
+                    throw;
+                logger.Warn("Не удалось обновить список преподавателей.", e);
+            }
         }
-        static void TeachersShedInit()
+        static void TeachersShedInit(bool onstart = true)
         {
             //Might take a few minutes to load them all
-            logger.Info($"Начата загрузка расписаний {TeacherList.Count} преподавателей.");
-            foreach (var teach in TeacherList)
-                TeacherSchedule[teach.Key] = (TeacherMethods.RequestWeekSchedule(teach.Key), DateTime.Now);
-            logger.Info($"Завершена загрузка расписаний {TeacherSchedule.Count} преподавателей.");
+            try
+            {
+                logger.Info($"Начата загрузка расписаний {TeacherList.Count} преподавателей.");
+                foreach (var teach in TeacherList)
+                    TeacherSchedule[teach.Key] = (TeacherMethods.RequestWeekSchedule(teach.Key), DateTime.Now);
+                logger.Info($"Завершена загрузка расписаний {TeacherSchedule.Count} преподавателей.");
+            }
+            catch (System.Net.WebException e)
+            {
+                if (onstart)
+                    throw;
+                logger.Warn("Не удалось обновить расписания преподавателей.", e);
+            }
         }
 
-        public static void WeekInit()
+        public static void WeekInitPlanned()
+        {
+            WeekInit(true);
+        }
+
+        public static void WeekInit(bool planned)
         {
             logger.Info("Updating curWeek...");
             logger.Info($"Cur week setting: {TimeOfLesson.curWeek}");
-            Week curWeek = CurrentSubject.RequestCurrentWeek();
+            Week curWeek = new Week();
+            try
+            {
+                curWeek = CurrentSubject.RequestCurrentWeek();
+            }
+            catch(System.Net.WebException e)
+            {
+                logger.Warn("Не удалось обновить тип недели", e);
+                if (planned)
+                {
+                    logger.Warn("Обновление типа недели плановое, поэтому будет установлен тип обратный нынешнему.");
+                    curWeek.type = TimeOfLesson.curWeek.reversedtype();
+                }
+            }
             TimeOfLesson.curWeek = curWeek;
             logger.Info($"Cur week after setting: {TimeOfLesson.curWeek}");
         }
@@ -121,23 +157,41 @@ namespace ScheduleBot
         /// <summary>
         /// Gets list of grades
         /// </summary>
-        static void GradeInit()
+        static void GradeInit(bool onstart = true)
         {
-            GradeList = GradeMethods.GetGradesList().ToList();
-            for (int i = 0; i < GradeList.Count; i++)
+            try
             {
-                GradeList[i].Groups = GradeMethods.GetGroupsList(GradeList[i].id).ToList();
+                GradeList = GradeMethods.GetGradesList().ToList();
+                for (int i = 0; i < GradeList.Count; i++)
+                {
+                    GradeList[i].Groups = GradeMethods.GetGroupsList(GradeList[i].id).ToList();
+                }
+                logger.Info("Список курсов получен.");
             }
-            logger.Info("Список курсов получен.");
+            catch (System.Net.WebException e)
+            {
+                if (onstart)
+                    throw;
+                logger.Warn("Не удалось обновить список курсов.", e);
+            }
         }
 
-        static void GroupShedListInit()
+        static void GroupShedListInit(bool onstart = true)
         {
+            try
+            {
                 logger.Info("Начата загрузка расписаний групп.");
                 foreach (var grade in GradeList)
                     foreach (var group in grade.Groups)
                         GroupShedule[group.id] = (StudentMethods.RequestWeekSchedule(group.id), DateTime.Now);
                 logger.Info("Завершена загрузка расписаний групп.");
+            }
+            catch (System.Net.WebException e)
+            {
+                if (onstart)
+                    throw;
+                logger.Warn("Не удалось обновить расписание групп.", e);
+            }
         }
 
         /// <summary>
@@ -150,9 +204,9 @@ namespace ScheduleBot
                 electives = Elective.GetElectives();
                 logger.Info("Список факультативов получен.");
             }
-            catch (FileNotFoundException)
+            catch (FileNotFoundException e)
             {
-                logger.Info("Список факультативов не был загружен!");
+                logger.Info("Список факультативов не был загружен!", e);
             }
             electivesStr = electives == null ? "Нет данных о факультативах" : Elective.ElectivesToString(electives);
         }
@@ -170,8 +224,7 @@ namespace ScheduleBot
             }
             catch (FileNotFoundException e)
             {
-                logger.Info("File 'token.key' wasn't found in the working directory!\nPlease save Telegram BOT token to file named 'token.key'.");
-                logger.Info(e.Message);
+                logger.Info("File 'token.key' wasn't found in the working directory!\nPlease save Telegram BOT token to file named 'token.key'.", e);
                 Environment.Exit(1);
             }
             return token;

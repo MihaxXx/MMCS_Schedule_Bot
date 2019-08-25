@@ -179,11 +179,11 @@ namespace ScheduleBot
                             break;
                         case "/forceupdate":
                             logger.Info($"Запрошено принудительное обновление расписаний, ID: {msg.Chat.Id}, @{msg.Chat.Username}.");
-                            TeachersInit();
-                            GradeInit();
-                            GroupShedListInit();
-                            TeachersShedInit();
-                            WeekInit();
+                            TeachersInit(false);
+                            GradeInit(false);
+                            GroupShedListInit(false);
+                            TeachersShedInit(false);
+                            WeekInit(false);
                             logger.Info($"Завершено принудительное обновление расписаний, ID: {msg.Chat.Id}, @{msg.Chat.Username}.");
                             Answer = "Данные расписаний обновлены!";
                             break;

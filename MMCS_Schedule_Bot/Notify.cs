@@ -43,7 +43,7 @@ namespace Notify
         public static Task ResetWeekType()
         {
 
-            var task = Task.Factory.StartNew(Program.WeekInit);
+            var task = Task.Factory.StartNew(Program.WeekInitPlanned);
             return task;
 
         }
