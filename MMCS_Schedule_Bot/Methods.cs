@@ -79,7 +79,7 @@ namespace API
 
 		public bool Equals(TimeOfLesson other)
         	{
-        	    return String.Equals(this.ToString(), other.ToString());
+        	    return string.Equals(this.ToString(), other.ToString());
         	}
 		/// <summary>
 		/// Silent convert time units from string to integer
@@ -88,9 +88,8 @@ namespace API
 		/// <returns></returns>
 		private static int ToIntegerTime(string time)
 		{
-			int int_x;
-			return int.TryParse(time, out int_x) ? int_x : -1;
-		}
+            return int.TryParse(time, out int int_x) ? int_x : -1;
+        }
 		/// <summary>
 		/// Converts the string representation of a time-slot to its TimeOfLesson equivalent.
 		/// </summary>
@@ -98,7 +97,6 @@ namespace API
 		/// <returns></returns>
 		public static TimeOfLesson Parse(string s)
 		{
-			//TODO:Maybe change to init with {} after Split by , and :
 			s = s.Substring(1, s.Length - 2);
 			TimeOfLesson t = new TimeOfLesson();
 			string[] times = s.Split(',');
