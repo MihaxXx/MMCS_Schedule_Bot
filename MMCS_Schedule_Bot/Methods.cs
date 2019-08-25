@@ -4,6 +4,7 @@ using System;
 using System.IO;
 
 using static API.CurrentSubject;
+using NLog;
 
 namespace API
 {
@@ -194,6 +195,8 @@ namespace API
     }
     public static class StudentMethods
     {
+        static public Logger logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// String representation (grade, program, course.group) for students groupID
         /// </summary>
@@ -265,9 +268,9 @@ namespace API
             {
                 try
                 { ScheduleBot.Program.GroupShedule[groupID] = (RequestWeekSchedule(groupID), DateTime.Now); }
-                catch (System.Net.WebException)
+                catch (System.Net.WebException e)
                 {
-                    //TODO: logging
+                    logger.Warn($"Не удалось обновить расписание для группы groupID {groupID}.", e);
                 }
             }
             return ScheduleBot.Program.GroupShedule[groupID].Item1;
@@ -300,6 +303,8 @@ namespace API
 
     public static class TeacherMethods
     {
+        static public Logger logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// Get teachers list (not cached)
         /// </summary>
@@ -372,9 +377,9 @@ namespace API
             {
                 try
                 { ScheduleBot.Program.TeacherSchedule[teacherID] = (RequestWeekSchedule(teacherID), DateTime.Now); }
-                catch (System.Net.WebException)
+                catch (System.Net.WebException e)
                 {
-                    //TODO: logging
+                    logger.Warn($"Не удалось обновить расписание для преподавателя teacherID {teacherID}.", e);
                 }
             }
             return ScheduleBot.Program.TeacherSchedule[teacherID].Item1;
