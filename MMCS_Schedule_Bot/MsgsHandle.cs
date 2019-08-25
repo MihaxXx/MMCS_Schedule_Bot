@@ -394,7 +394,7 @@ namespace ScheduleBot
                 case "/forget":
                 case "забудь меня":
                     UserList[msg.Chat.Id].ident = 0;
-                    Answer = "Я тебя забыл! Для повторной регистрации пиши /start";
+                    Answer = "Я вас забыл! Для повторной регистрации пиши /start";
                     break;
                 default:
                     if (UserList[msg.Chat.Id].ident == 2 && UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
@@ -511,7 +511,7 @@ namespace ScheduleBot
             if (LC.Item2.Count > 0)
             {
                 var ts = TimeOfLesson.Parse(LC.Item1.timeslot);
-                res = (showDoW ? "*" + (DayOfW)ts.day + "* " : "") + $"*{ts.starth}:{ts.startm.ToString("D2")}–{ts.finishh}:{ts.finishm.ToString("D2")}*" + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "");
+                res = (showDoW ? "*_" + (DayOfW)ts.day + "_* " : "") + $"*{ts.starth}:{ts.startm.ToString("D2")}–{ts.finishh}:{ts.finishm.ToString("D2")}*" + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "");
                 //res = LC.Item1.timeslot + "\n";
                 if (LC.Item2.Count > 1)
                 {
@@ -528,7 +528,7 @@ namespace ScheduleBot
                     res += " — " + String.Join('\n', LC.Item2.Select(c => $"{c.subjectname}, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
             }
             else
-                res = "Нет информации о парах для твоей группы.";
+                res = "Нет информации о парах для вашей группы.";
             return res;
         }
 
@@ -589,7 +589,7 @@ namespace ScheduleBot
             if (LCG.Item3.Count > 0)
             {
                 var ts = TimeOfLesson.Parse(LCG.Item1.timeslot);
-                res = (showDoW ? "*" + (DayOfW)ts.day + "* " : "") +
+                res = (showDoW ? "*_" + (DayOfW)ts.day + "_* " : "") +
                     $"*{ts.starth}:{ts.startm.ToString("D2")}–{ts.finishh}:{ts.finishm.ToString("D2")}*"
                     + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "") + " — ";
                 res += string.Join('\n', LCG.Item2.Select(c => c.subjectname + ", ауд.*" + c.roomname)) + "*\n    " +
