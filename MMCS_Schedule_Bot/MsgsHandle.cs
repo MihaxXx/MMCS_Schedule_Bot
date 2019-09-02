@@ -198,13 +198,19 @@ namespace ScheduleBot
                     Answer = "Ошибка! Вероятно, сервер интерактивного расписания недоступен. Пожалуйста, попробуйте повторить запрос позднее.";
                 }
             }
-            if (IsRegistered(msg.Chat.Id))
-                await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, ParseMode.Markdown, replyMarkup: UserList[msg.Chat.Id].Info == User.UserInfo.teacher ? teacherKeyboard : studentKeyboard);
-            else if (UserList[msg.Chat.Id].ident == 1)
-                await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registrationKeyboard);
-            else
-                await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
-
+            try
+            {
+                if (IsRegistered(msg.Chat.Id))
+                    await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, ParseMode.Markdown, replyMarkup: UserList[msg.Chat.Id].Info == User.UserInfo.teacher ? teacherKeyboard : studentKeyboard);
+                else if (UserList[msg.Chat.Id].ident == 1)
+                    await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: registrationKeyboard);
+                else
+                    await BOT.SendTextMessageAsync(msg.Chat.Id, Answer);
+            }
+            catch (Exception ex) when (ex is System.Net.Http.HttpRequestException && ex.Message.Contains("429"))
+            {
+                logger.Warn(ex, $"Сетевая ошибка при ответе @{msg.Chat.Username}");
+            }
         }
 
         /// <summary>
