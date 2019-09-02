@@ -135,7 +135,7 @@ namespace ScheduleBot
                             if (UserList[msg.Chat.Id].Info == User.UserInfo.teacher)
                                 Answer = $"Вы {TeacherList[UserList[msg.Chat.Id].teacherId].name}";     //База старая, так что выводим только ФИО!!!
                             else
-                                Answer = $"Вы {msg.Chat.FirstName} из группы {StudentMethods.groupIDToCourseGroup(UserList[msg.Chat.Id].groupid)}";
+                                Answer = $"Вы {msg.Chat.FirstName.Replace("`","").Replace("_","").Replace("*","")} из группы {StudentMethods.groupIDToCourseGroup(UserList[msg.Chat.Id].groupid)}";
                             break;
 
                         case "/eveningnotify":
@@ -168,7 +168,7 @@ namespace ScheduleBot
                             Answer = "Меня создали Миша, Дима, Дима, Глеб, Никита, Ира, Максим в рамках проектной деятельности на ФИиИТ в 2018-2019 уч. году.\n" +
                                 "Я предоставляю доступ к интерактивному расписанию мехмата через платформу ботов Telegram.\n" +
                                 "Если обнаружили ошибку в расписании, проверьте, совпадает ли оно с указанным на schedule.sfedu.ru. " +
-                                "При сопададении, для исправления обратитесь в деканат, либо напишите на it.lab.mmcs@gmail.com, в противном случае напишите @Miha_xXx.";
+                                "При сопададении, для исправления обратитесь в деканат, либо напишите на it.lab.mmcs@gmail.com, в противном случае напишите (tg://user?id=61026374).";
                             break;
                         case "/optionalcourses":
                         case "факультативы":
@@ -513,7 +513,7 @@ namespace ScheduleBot
             if (LC.Item2.Count > 0)
             {
                 var ts = TimeOfLesson.Parse(LC.Item1.timeslot);
-                res = (showDoW ? "*_" + (DayOfW)ts.day + "_* " : "") + $"*{ts.starth}:{ts.startm.ToString("D2")}–{ts.finishh}:{ts.finishm.ToString("D2")}*" + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "");
+                res = (showDoW ? "*" + (DayOfW)ts.day + "* " : "") + $"*{ts.starth}:{ts.startm.ToString("D2")}–{ts.finishh}:{ts.finishm.ToString("D2")}*" + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "");
                 //res = LC.Item1.timeslot + "\n";
                 if (LC.Item2.Count > 1)
                 {
@@ -591,7 +591,7 @@ namespace ScheduleBot
             if (LCG.Item3.Count > 0)
             {
                 var ts = TimeOfLesson.Parse(LCG.Item1.timeslot);
-                res = (showDoW ? "*_" + (DayOfW)ts.day + "_* " : "") +
+                res = (showDoW ? "*" + (DayOfW)ts.day + "* " : "") +
                     $"*{ts.starth}:{ts.startm.ToString("D2")}–{ts.finishh}:{ts.finishm.ToString("D2")}*"
                     + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "") + " — ";
                 res += string.Join('\n', LCG.Item2.Select(c => c.subjectname + ", ауд.*" + c.roomname)) + "*\n    " +
