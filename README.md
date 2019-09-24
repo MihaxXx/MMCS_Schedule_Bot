@@ -27,4 +27,5 @@ The bot created by students as part of project activity. One of it's most popula
 ### Documentation
 - [MMCS Schedule REST API](http://users.mmcs.sfedu.ru/~schedule/restapi/ "MMCS Schedule REST API") + [address fix](https://github.com/mmcs-sfedu/mmcs-schedule/commit/1b5b0463ac60f0cd813f2909c4ebbb5aab1799c3#diff-9fd21b0a7312feeab15141038d69909f "address fix");
 - [Telegram.Bot library](https://telegrambots.github.io/book/ "Telegram.Bot");
-- [Telegram Bot API](https://core.telegram.org/bots/api "Telegram Bot API").
+- [Telegram Bot API](https://core.telegram.org/bots/api "Telegram Bot API");
+- [Running in background](https://askubuntu.com/questions/57477/bring-nohup-job-to-foreground).
