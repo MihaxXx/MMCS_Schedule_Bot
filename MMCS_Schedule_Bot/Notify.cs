@@ -86,7 +86,7 @@ namespace Notify
 
             ITrigger resetNotifiedTrigger = TriggerBuilder.Create()
                 .WithIdentity("resetNotified")
-                .WithSchedule(CronScheduleBuilder.DailyAtHourAndMinute(03, 00))
+                .WithSchedule(CronScheduleBuilder.DailyAtHourAndMinute(03, 01))
                 .ForJob(resetNotified)
                 .Build();
 
@@ -99,7 +99,7 @@ namespace Notify
 
             ITrigger resetWeekTypeTrigger = TriggerBuilder.Create()
                 .WithIdentity("resetWeekType")
-                .WithCronSchedule($"0 30 0 ? * MON *")
+                .WithCronSchedule($"3 0 30 ? * MON *")
                 .ForJob(resetWeekType)
                 .Build();
 
