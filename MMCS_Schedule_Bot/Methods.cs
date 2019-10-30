@@ -121,16 +121,22 @@ namespace API
 		private static bool LessonIsOnNextWeek(TimeOfLesson timeOfLesson, DateTime now, int curDay)
 			=> timeOfLesson.day < curDay || timeOfLesson.day == curDay && LessonTimeTodayHasPassed(timeOfLesson, now);
 
+		private static bool LessonIsOnAnotherWeek(int lessonWeek, int currentWeek)
+			=> lessonWeek != -1 && lessonWeek != (currentWeek + 1) % 2;
+		
 		private static int GetFullDaysToLesson(TimeOfLesson timeOfLesson, Week week, DateTime now)
 		{
 			var currentWeek = week.type;
 			var curDay = ((int)now.DayOfWeek + 6) % 7;
 			var days = 0;
 
-			if (timeOfLesson.week != -1 && timeOfLesson.week != currentWeek)//is lesson held only on other type of weeks(U/L)
-				days += 7;
-			
 			if (LessonIsOnNextWeek(timeOfLesson, now, curDay))
+			{
+				days += 7;
+				if (LessonIsOnAnotherWeek(timeOfLesson.week, (currentWeek + 1) % 2))
+					days += 7;
+			}
+			else if (LessonIsOnAnotherWeek(timeOfLesson.week, currentWeek))
 				days += 7;
 			
 			//is it necessary to include today into full days before lesson count
