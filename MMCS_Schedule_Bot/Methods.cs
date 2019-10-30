@@ -57,6 +57,106 @@ namespace API
             return ans;
         }
     }
+
+    public class TimeOfLessonNEW
+    {
+        public static Week curWeek { get; set; }
+        //0..6 = пн..вс
+        public int day { get; set; }
+        public int starth { get; set; }
+        public int startm { get; set; }
+        public int finishh { get; set; }
+        public int finishm { get; set; }
+        //"full" = -1,"upper"= 0, "lower"= 1
+        public int week { get; set; }
+
+        public override string ToString()
+        {
+            return (day + 1) + ". " + starth + ":" + startm + " - " + finishh + ":" + finishm + " " + week + ". н.";
+        }
+
+        public bool Equals(TimeOfLessonNEW other)
+        {
+            return string.Equals(this.ToString(), other.ToString());
+        }
+        /// <summary>
+        /// Silent convert time units from string to integer
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private static int ToIntegerTime(string time)
+        {
+            return int.TryParse(time, out int int_x) ? int_x : -1;
+        }
+        /// <summary>
+        /// Converts the string representation of a time-slot to its TimeOfLesson equivalent.
+        /// </summary>
+        /// <param name="s">A string containing a time-slot to convert.</param>
+        /// <returns></returns>
+        public static TimeOfLessonNEW Parse(string s)
+        {
+            s = s.Substring(1, s.Length - 2);
+            TimeOfLessonNEW t = new TimeOfLessonNEW();
+            string[] times = s.Split(',');
+            t.day = ToIntegerTime(times[0]);
+            t.starth = ToIntegerTime(times[1].Substring(0, 2));
+            t.startm = ToIntegerTime(times[1].Substring(3, 2));
+            t.finishh = ToIntegerTime(times[2].Substring(0, 2));
+            t.finishm = ToIntegerTime(times[2].Substring(3, 2));
+            switch (times[3])
+            {
+                case "full": t.week = -1; break;
+                case "upper": t.week = 0; break;
+                case "lower": t.week = 1; break;
+            }
+            return t;
+        }
+
+        private static bool LessonTimeTodayHasPassed(TimeOfLessonNEW timeOfLesson, DateTime now)
+            => timeOfLesson.starth < now.Hour ||
+               timeOfLesson.starth == now.Hour && timeOfLesson.startm < now.Minute;
+
+        private static bool LessonIsOnNextWeek(TimeOfLessonNEW timeOfLesson, DateTime now, int curDay)
+            => timeOfLesson.day < curDay || timeOfLesson.day == curDay && LessonTimeTodayHasPassed(timeOfLesson, now);
+
+        private static int GetFullDaysToLesson(TimeOfLessonNEW timeOfLesson, Week week, DateTime now)
+        {
+            var currentWeek = week.type;
+            var curDay = ((int)now.DayOfWeek + 6) % 7;
+            var days = 0;
+
+            if (timeOfLesson.week != -1 && timeOfLesson.week != currentWeek)//is lesson held only on other type of weeks(U/L)
+                days += 7;
+
+            if (LessonIsOnNextWeek(timeOfLesson, now, curDay))
+                days += 7;
+
+            //is it necessary to include today into full days before lesson count
+            days += timeOfLesson.day - curDay - (LessonTimeTodayHasPassed(timeOfLesson, now) ? 1 : 0);
+
+            return days;
+        }
+
+        /// <summary>
+        /// Counts number of minutes before lesson starts
+        /// </summary>
+        /// <param name="timeOfLesson">Lesson's time-slot</param>
+        /// <param name="week"></param>
+        /// <returns></returns>
+        public static int GetMinsToLesson(TimeOfLessonNEW timeOfLesson, Week week)
+        {
+            var now = DateTime.Now;
+            var minutes = GetFullDaysToLesson(timeOfLesson, week, now) * 24 * 60;
+
+            if (LessonTimeTodayHasPassed(timeOfLesson, now))
+                minutes += (23 - now.Hour + timeOfLesson.starth) * 60 + (60 - now.Minute) + timeOfLesson.startm;
+            else
+                minutes += (timeOfLesson.starth - now.Hour) * 60 + (timeOfLesson.startm - now.Minute);
+
+            return minutes;
+        }
+    }
+
     /// <summary>
     /// Time-slot struct
     /// </summary>
