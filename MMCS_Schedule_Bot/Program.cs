@@ -22,15 +22,27 @@ namespace ScheduleBot
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            var test1 = StudentMethods.RequestWeekSchedule(48);
-            foreach (var LLC in test1)
+            Json_Data.ReadData();
+            KeyboardInit();
+            TeachersInit();
+            GradeInit();
+            if (!(Environment.GetCommandLineArgs().Length > 1 && Environment.GetCommandLineArgs()[1] == "-nopreload"))
             {
-                var w = CurrentSubject.RequestCurrentWeek();
-                var t1 = TimeOfLesson.GetMinsToLesson(TimeOfLesson.Parse(LLC.Item1.timeslot), w);
-                var t2 = TimeOfLessonNEW.GetMinsToLesson(TimeOfLessonNEW.Parse(LLC.Item1.timeslot), w);
-                Console.WriteLine($"{t1:d5}  {t2:d5}");
-                System.Diagnostics.Debug.Assert(t1 == t2);
+                TeachersShedInit();
+                GroupShedListInit();
             }
+            GetElectives();
+
+            BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
+            logger.Info("Подключен бот.");
+            BOT.OnMessage += BotOnMessageReceived;
+
+            BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
+            Scheduler.RunNotifier().GetAwaiter().GetResult();
+            logger.Info("Ожидает сообщений...");
+
+            Console.CancelKeyPress += OnExit;
+            _closing.WaitOne();
         }
 
 
