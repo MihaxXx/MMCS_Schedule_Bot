@@ -113,48 +113,58 @@ namespace API
 			}
 			return t;
 		}
-        /// <summary>
-        /// Counts number of minutes before lesson starts
-        /// </summary>
-        /// <param name="ToL">Lesson's time-slot</param>
-        /// <returns></returns>
-        static public int GetMinsToLesson(TimeOfLesson ToL, Week week)
+		
+		private static bool LessonTimeTodayHasPassed(TimeOfLesson timeOfLesson, DateTime now)
+			=> timeOfLesson.starth < now.Hour ||
+			   timeOfLesson.starth == now.Hour && timeOfLesson.startm < now.Minute;
+
+		private static bool LessonIsOnNextWeek(TimeOfLesson timeOfLesson, DateTime now, int curDay)
+			=> timeOfLesson.day < curDay || timeOfLesson.day == curDay && LessonTimeTodayHasPassed(timeOfLesson, now);
+
+		private static bool LessonIsOnAnotherWeek(int lessonWeek, int currentWeek)
+			=> lessonWeek != -1 && lessonWeek != (currentWeek + 1) % 2;
+		
+		private static int GetFullDaysToLesson(TimeOfLesson timeOfLesson, Week week, DateTime now)
 		{
-			int res = 0;
-			int CurWeek = week.type;
-			var CurTime = System.DateTime.Now;
-			int CurDay = (((int)CurTime.DayOfWeek) + 6) % 7;
-			int days = 0;
+			var currentWeek = week.type;
+			var curDay = ((int)now.DayOfWeek + 6) % 7;
+			var days = 0;
 
-			if (ToL.day < CurDay || (ToL.day == CurDay && ToL.starth < CurTime.Hour) || (ToL.day == CurDay && ToL.starth == CurTime.Hour && ToL.startm < CurTime.Minute))//lesson is on the next week
+			if (LessonIsOnNextWeek(timeOfLesson, now, curDay))
 			{
-				if (ToL.starth < CurTime.Hour || (ToL.starth == CurTime.Hour && ToL.startm < CurTime.Minute))//is it necessary to include today into full days before lesson count
-					days += (ToL.day + 6 - CurDay);
-				else
-					days += (ToL.day + 7 - CurDay);
-				if (ToL.week != -1 && ToL.week != (CurWeek+1)%2)//is lesson held only on other type of weeks(U/L)
+				days += 7;
+				if (LessonIsOnAnotherWeek(timeOfLesson.week, (currentWeek + 1) % 2))
 					days += 7;
 			}
-			else//lesson is on this week
-			{
-				if (ToL.starth < CurTime.Hour || (ToL.starth == CurTime.Hour && ToL.startm < CurTime.Minute))//is it necessary to include today into full days before lesson count
-					days += (ToL.day - CurDay - 1);
-				else
-					days += (ToL.day - CurDay);
-				if (ToL.week != -1 && ToL.week != CurWeek)//is lesson held only on other type of weeks(U/L)
-					days += 7;
-			}
-			res += days * 24 * 60;
+			else if (LessonIsOnAnotherWeek(timeOfLesson.week, currentWeek))
+				days += 7;
+			
+			//is it necessary to include today into full days before lesson count
+			days += timeOfLesson.day - curDay - (LessonTimeTodayHasPassed(timeOfLesson, now) ? 1 : 0);
 
-			if (ToL.starth < CurTime.Hour || (ToL.starth == CurTime.Hour && ToL.startm < CurTime.Minute))//Lesson is not today
-				res += (23 - CurTime.Hour + ToL.starth) * 60 + (60 - CurTime.Minute)+ToL.startm;
-			else //Lesson is held today
-				res += (ToL.starth - CurTime.Hour) * 60 + (ToL.startm - CurTime.Minute);
-
-			return res;
+			return days;
 		}
-	}
 
+		/// <summary>
+		/// Counts number of minutes before lesson starts
+		/// </summary>
+		/// <param name="timeOfLesson">Lesson's time-slot</param>
+		/// <param name="week"></param>
+		/// <returns></returns>
+		public static int GetMinsToLesson(TimeOfLesson timeOfLesson, Week week)
+		{
+			var now = DateTime.Now;
+			var minutes = GetFullDaysToLesson(timeOfLesson, week, now) * 24 * 60;
+
+			if (LessonTimeTodayHasPassed(timeOfLesson, now))
+				minutes += (23 - now.Hour + timeOfLesson.starth) * 60 + (60 - now.Minute) + timeOfLesson.startm;
+			else
+				minutes += (timeOfLesson.starth - now.Hour) * 60 + (timeOfLesson.startm - now.Minute);
+
+			return minutes;
+		}
+    }
+    
     public static class CurrentSubject
     {
         public static int GetCurDayOfWeek() => (((int)System.DateTime.Now.DayOfWeek) + 6) % 7;
