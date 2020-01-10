@@ -99,7 +99,7 @@ namespace Notify
 
             ITrigger resetWeekTypeTrigger = TriggerBuilder.Create()
                 .WithIdentity("resetWeekType")
-                .WithCronSchedule($"07 00 0 ? * MON *")
+                .WithSchedule(CronScheduleBuilder.WeeklyOnDayAndHourAndMinute(DayOfWeek.Monday, 7, 0))
                 .ForJob(resetWeekType)
                 .Build();
 
