@@ -208,7 +208,8 @@ namespace ScheduleBot
             {
                 logger.Info("Список факультативов не был загружен!", e);
             }
-            electivesStr = electives == null ? "Нет данных о факультативах" : Elective.ElectivesToString(electives);
+            electivesStr = "[Раздел сайта с информацией о факультативах и кружках](http://www.mmcs.sfedu.ru/science/seminars)\n\n"+
+                (electives == null ? "Нет данных о факультативах" : Elective.ElectivesToString(electives));
         }
 
         /// <summary>
