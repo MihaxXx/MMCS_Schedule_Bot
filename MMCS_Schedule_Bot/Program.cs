@@ -7,6 +7,7 @@ using System.Threading;
 using NLog;
 using Telegram;
 using Telegram.Bot.Types.Enums;
+using VkBotFramework;
 
 using API;
 using Notify;
@@ -24,6 +25,7 @@ namespace ScheduleBot
         {
             Json_Data.ReadData();
             KeyboardInit();
+            WeekInitPlanned();
             TeachersInit();
             GradeInit();
             if (!(Environment.GetCommandLineArgs().Length > 1 && Environment.GetCommandLineArgs()[1] == "-nopreload"))
@@ -33,13 +35,22 @@ namespace ScheduleBot
             }
             GetElectives();
 
+
             BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
-            logger.Info("Подключен бот.");
+            logger.Info("Подключен бот Telegram.");
             BOT.OnMessage += BotOnMessageReceived;
 
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
             Scheduler.RunNotifier().GetAwaiter().GetResult();
             logger.Info("Ожидает сообщений...");
+            
+
+            vkBot = new VkBot(ReadTokenVK().Item1, ReadTokenVK().Item2);
+            vkBot.OnMessageReceived += BotOnMessageReceived;
+            logger.Info("Подключен бот VK.");
+            vkBot.StartAsync();
+            logger.Info("Ожидает сообщений...");
+
 
             Console.CancelKeyPress += OnExit;
             _closing.WaitOne();
@@ -51,6 +62,8 @@ namespace ScheduleBot
         /// Used for teacher registration and finding teacher
         /// </summary>
         static private Dictionary<long, Teacher[]> NameMatches = new Dictionary<long, Teacher[]>();
+
+        static private Dictionary<long, Teacher[]> NameMatchesVK = new Dictionary<long, Teacher[]>();
 
         /// <summary>
         /// List of teachers
@@ -77,10 +90,14 @@ namespace ScheduleBot
         /// </summary>
         static Telegram.Bot.TelegramBotClient BOT;
 
+        static VkBot vkBot;
+
         /// <summary>
         /// User DB by Telegram IDs
         /// </summary>
         static public Dictionary<long, User> UserList = new Dictionary<long, User>();
+
+        static public Dictionary<long, User> UserListVK = new Dictionary<long, User>();
 
         private static readonly AutoResetEvent _closing = new AutoResetEvent(false);
 
@@ -229,6 +246,21 @@ namespace ScheduleBot
                 Environment.Exit(1);
             }
             return token;
+        }
+        public static (string,string) ReadTokenVK()
+        {
+            var res = (string.Empty, string.Empty);
+            try
+            {
+                var content = File.ReadAllLines("tokenVK.key", Encoding.UTF8);
+                res = (content[0], content[1]);
+            }
+            catch (FileNotFoundException e)
+            {
+                logger.Info("File 'tokenVK.key' wasn't found in the working directory!\nPlease save Telegram BOT token to file named 'token.key'.", e);
+                Environment.Exit(1);
+            }
+            return res;
         }
     }
 }

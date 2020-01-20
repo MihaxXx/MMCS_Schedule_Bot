@@ -6,6 +6,9 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 
 using API;
+using VkBotFramework.Models;
+using VkNet.Model.RequestParams;
+using VkNet.Model.Keyboard;
 
 namespace ScheduleBot
 {
@@ -13,6 +16,244 @@ namespace ScheduleBot
     {
         static IEnumerable<Elective> electives;
         static string electivesStr;
+
+        static async void BotOnMessageReceived(object sender, MessageReceivedEventArgs eventArgs)
+        {
+            var msg = eventArgs.Message;
+            if (msg == null || msg.Text == string.Empty)
+                return;
+
+            string Answer = "Server Error";
+
+            if (System.DateTime.UtcNow.Subtract(msg.Date.Value).TotalMinutes > 3)
+            {
+                vkBot.Api.Messages.Send(new MessagesSendParams()
+                {
+                    RandomId = Environment.TickCount,
+                    PeerId = msg.PeerId,
+                    Message = Answer
+                });
+                return;
+            }
+
+            if (UserListVK.ContainsKey(msg.PeerId.Value))
+                UserListVK[msg.PeerId.Value].LastAccess = DateTime.Now;
+
+            if (!IsRegisteredVK(msg.PeerId.Value))
+            {
+                if (!UserListVK.ContainsKey(msg.PeerId.Value))
+                    UserListVK.Add(msg.PeerId.Value, new User());
+                Answer = Registration(msg);      //регистрация студента
+            }//prev command was /findteacher
+            else if (UserListVK[msg.PeerId.Value].ident == 4)
+            {
+                if (!NameMatchesVK.ContainsKey(msg.PeerId.Value))
+                {
+                    var lst = ReturnTeachersId(msg.Text);
+                    if (lst.Length == 1)
+                    {
+                        Answer = LessonTechToStr(TeacherMethods.GetCurrentLesson(lst[0].id), true);
+                        UserListVK[msg.PeerId.Value].ident = 3;
+                    }
+                    else if (lst.Length > 1)
+                    {
+                        NameMatchesVK.Add(msg.PeerId.Value, lst);
+                        var s = $"Найдено несколько совпадений:\n";
+                        for (var i = 0; i < lst.Length; i++)
+                            s = s + $"{i + 1}) {lst[i].name}\n";
+                        s = s + "Ввведи номер выбранного преподавателя.";
+                        Answer = s;
+                    }
+                    else
+                        Answer = "Ошибка, преподаватель не найден! Попробуй ещё раз.";
+                }
+                else
+                {
+                    if (int.TryParse(msg.Text, out int n) && n - 1 < NameMatchesVK[msg.PeerId.Value].Length && n - 1 >= 0)
+                    {
+                        var LCG = TeacherMethods.GetCurrentLesson(NameMatchesVK[msg.PeerId.Value][n - 1].id);
+                        Answer = LessonTechToStr(LCG, true);
+                        UserListVK[msg.PeerId.Value].ident = 3;
+                        NameMatchesVK.Remove(msg.PeerId.Value);
+                    }
+                    else
+                    {
+                        Answer = "Ошибка, введён некорректный номер.";
+                    }
+                }
+            }
+            else if (UserListVK[msg.PeerId.Value].ident == 5)
+            {
+                bool onOrOff = msg.Text.ToLower() == "включить";
+                UserListVK[msg.PeerId.Value].eveningNotify = onOrOff;
+                UserListVK[msg.PeerId.Value].ident = 3;
+                Json_Data.WriteData();
+                string onOrOffMsg = onOrOff ? "включено" : "выключено";
+                Answer = $"Вечернее уведомление *{onOrOffMsg}*.";
+            }
+            else if (UserListVK[msg.PeerId.Value].ident == 6)
+            {
+                bool onOrOff = msg.Text.ToLower() == "включить";
+                UserListVK[msg.PeerId.Value].preLessonNotify = onOrOff;
+                UserListVK[msg.PeerId.Value].ident = 3;
+                Json_Data.WriteData();
+                string onOrOffMsg = onOrOff ? "включено" : "выключено";
+                Answer = $"Уведомление за 15 минут до первой пары *{onOrOffMsg}*.";
+            }
+            else
+            {
+                try
+                {
+                    switch (msg.Text.ToLower())             // Обработка команд боту
+                    {
+                        case "/next":
+                        case "ближайшая пара":
+                            if (UserListVK[msg.PeerId.Value].Info != User.UserInfo.teacher)
+                                Answer = LessonToStr(StudentMethods.GetCurrentLesson(UserListVK[msg.PeerId.Value].groupid), true);
+                            else
+                                Answer = LessonTechToStr(TeacherMethods.GetCurrentLesson(UserListVK[msg.PeerId.Value].teacherId), true);
+                            break;
+                        case "/findteacher":
+                        case "найти преподавателя":
+                            Answer = "Введи фамилию преподавателя";
+                            UserListVK[msg.PeerId.Value].ident = 4;
+                            break;
+                        case "/week":
+                        case "расписание на неделю":
+                            if (UserListVK[msg.PeerId.Value].Info != User.UserInfo.teacher)
+                                Answer = WeekSchToStr(StudentMethods.GetWeekSchedule(UserListVK[msg.PeerId.Value].groupid));
+                            else
+                                Answer = WeekSchTechToStr(TeacherMethods.GetWeekSchedule(UserListVK[msg.PeerId.Value].teacherId));
+                            break;
+                        case "/today":
+                        case "расписание на сегодня":
+                            if (UserListVK[msg.PeerId.Value].Info != User.UserInfo.teacher)
+                                Answer = DaySchToStr(StudentMethods.GetTodaySchedule(UserListVK[msg.PeerId.Value].groupid));
+                            else
+                                Answer = DaySchTechToStr(TeacherMethods.GetTodaySchedule(UserListVK[msg.PeerId.Value].teacherId));
+                            break;
+                        case "/tomorrow":
+                        case "расписание на завтра":
+                            if (UserListVK[msg.PeerId.Value].Info != User.UserInfo.teacher)
+                                Answer = DaySchToStr(StudentMethods.GetTomorrowSchedule(UserListVK[msg.PeerId.Value].groupid));
+                            else
+                                Answer = DaySchTechToStr(TeacherMethods.GetTomorrowSchedule(UserListVK[msg.PeerId.Value].teacherId));
+                            break;
+                        case "/knowme":
+                        case "знаешь меня?":
+                            if (UserListVK[msg.PeerId.Value].Info == User.UserInfo.teacher)
+                                Answer = $"Вы {TeacherList[UserListVK[msg.PeerId.Value].teacherId].name}";     //База старая, так что выводим только ФИО!!!
+                            else
+                                Answer = $"Вы {vkBot.Api.Users.Get(new List<long> {msg.FromId.Value}).First().FirstName.Replace("`", "").Replace("_", "").Replace("*", "")} из группы {StudentMethods.groupIDToCourseGroup(UserListVK[msg.PeerId.Value].groupid)}";
+                            break;
+                            /*
+                        case "/eveningnotify":
+                            Answer = $"Сейчас вечернее уведомление о завтрашней первой паре *{(UserListVK[msg.PeerId.Value].eveningNotify ? "включено" : "выключено")}*. \nНастройте его.";
+                            UserListVK[msg.PeerId.Value].ident = 5;
+                            vkBot.Api.Messages.Send(new MessagesSendParams()
+                            {
+                                RandomId = Environment.TickCount,
+                                PeerId = msg.PeerId,
+                                Message = Answer,
+                                Keyboard = notifierKeyboardVk
+                            });
+                            return;
+
+                        case "/prelessonnotify":
+                            Answer = $"Сейчас уведомление за 15 минут до первой пары *{(UserListVK[msg.PeerId.Value].preLessonNotify ? "включено" : "выключено")}*. \nНастройте его.";
+                            UserListVK[msg.PeerId.Value].ident = 6;
+                            vkBot.Api.Messages.Send(new MessagesSendParams()
+                            {
+                                RandomId = Environment.TickCount,
+                                PeerId = msg.PeerId,
+                                Message = Answer,
+                                Keyboard = notifierKeyboardVk
+                            });
+                            return;
+                            */
+                        case "/forget":
+                        case "забудь меня":
+                            UserListVK.Remove(msg.PeerId.Value);
+                            Json_Data.WriteData();
+                            Answer = "Я вас забыл! Для повторной регистрации пиши /start";
+                            vkBot.Api.Messages.Send(new MessagesSendParams()
+                            {
+                                RandomId = Environment.TickCount,
+                                PeerId = msg.PeerId,
+                                Message = Answer
+                            });
+                            return;
+
+                        case "помощь":
+                        case "/help":
+                            Answer = _help;
+                            break;
+                        case "/info":
+                        case "информация":
+                            Answer = "Меня создали Миша, Дима, Дима, Глеб, Никита, Ира, Максим в рамках проектной деятельности на ФИиИТ в 2018-2019 уч. году.\n" +
+                                "Я предоставляю доступ к интерактивному расписанию мехмата через платформы ботов Telegram и VK.\n" +
+                                "Если обнаружили ошибку в расписании, проверьте, совпадает ли оно с указанным на schedule.sfedu.ru. " +
+                                "При сопададении, для исправления обратитесь в деканат, либо напишите на it.lab.mmcs@gmail.com, в противном случае напишите [id67145152|Михаилу].";
+                            break;
+                        case "/optionalcourses":
+                        case "факультативы":
+                            Answer = electivesStr;
+                            break;
+                        case "/curweek":
+                            Answer = $"Сейчас *{CurrentSubject.GetCurrentWeek().ToString()}* неделя.";
+                            break;
+                        case "/forceupdate":
+                            logger.Info($"Запрошено принудительное обновление расписаний, VK ID: {msg.PeerId.Value}.");
+                            TeachersInit(false);
+                            GradeInit(false);
+                            GroupShedListInit(false);
+                            TeachersShedInit(false);
+                            WeekInit(false);
+                            logger.Info($"Завершено принудительное обновление расписаний, VK ID: {msg.PeerId.Value}.");
+                            Answer = "Данные расписаний обновлены!";
+                            break;
+                        default:
+                            Answer = "Введены неверные данные, повторите попытку.";
+                            break;
+                    }
+                }
+                catch (System.Net.WebException e)
+                {
+                    logger.Error(e, "Catched exeption:");
+                    Answer = "Ошибка! Вероятно, сервер интерактивного расписания недоступен. Пожалуйста, попробуйте повторить запрос позднее.";
+                }
+            }
+            try
+            {
+                if (IsRegisteredVK(msg.PeerId.Value))
+                    vkBot.Api.Messages.Send(new MessagesSendParams()
+                    {
+                        RandomId = Environment.TickCount,
+                        PeerId = msg.PeerId,
+                        Message = Answer,
+                        Keyboard = UserListVK[msg.PeerId.Value].Info == User.UserInfo.teacher ? teacherKeyboardVk : studentKeyboardVk
+                    });
+                else if (UserListVK[msg.PeerId.Value].ident == 1)
+                    vkBot.Api.Messages.Send(new MessagesSendParams()
+                    {
+                        RandomId = Environment.TickCount,
+                        PeerId = msg.PeerId,
+                        Message = Answer,
+                        Keyboard = registrationKeyboardVk
+                    });
+                else
+                    vkBot.Api.Messages.Send(new MessagesSendParams()
+                    {
+                        RandomId = Environment.TickCount,
+                        PeerId = msg.PeerId,
+                        Message = Answer
+                    });
+            }
+            catch (Exception ex) when (ex is System.Net.Http.HttpRequestException && ex.Message.Contains("429"))
+            {
+                logger.Warn(ex, $"Сетевая ошибка при ответе в чат id: {msg.ChatId}");
+            }
+        }
         static async void BotOnMessageReceived(object sender, MessageEventArgs MessageEventArgs)
         {
             Telegram.Bot.Types.Message msg = MessageEventArgs.Message;
@@ -213,6 +454,43 @@ namespace ScheduleBot
             }
         }
 
+        static MessageKeyboard studentKeyboardVk = new MessageKeyboard()
+        {
+            Buttons = (new[] {
+                            new[]{ new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Ближайшая пара" } },new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Расписание на сегодня" } } },      //Кастомная клава для студентов
+                            new[]{ new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Расписание на неделю" } },new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Помощь" } } }
+                            }
+                        )
+        };
+
+        static MessageKeyboard teacherKeyboardVk = new MessageKeyboard()
+        {
+            Buttons = (new[] {
+                            new[]{ new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Ближайшая пара" } },new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Расписание на сегодня" } } },      //Кастомная клава для препода
+                            new[]{ new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Расписание на неделю" } },new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Помощь" } } }
+                            }
+                        )
+        };
+
+        static MessageKeyboard registrationKeyboardVk = new MessageKeyboard()
+        {
+            Buttons = (new[] {
+                            new[]{ new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Бакалавр" } },new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Магистр" } } },      //Кастомная клава для регистрации
+                            new[]{ new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Аспирант" } },new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Преподаватель" } } }
+                            }
+                        ),
+            OneTime = true
+        };
+
+        static MessageKeyboard notifierKeyboardVk = new MessageKeyboard()
+        {
+            Buttons = (new[] {
+                            new[]{ new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Включить" } },new MessageKeyboardButton() { Action = new MessageKeyboardButtonAction() { Label = "Выключить" } } },      //Keyboard for notifier settings
+                            }
+                        ),
+            OneTime = true
+        };
+
         /// <summary>
         /// Keyboard for registered users
         /// </summary>
@@ -258,16 +536,23 @@ namespace ScheduleBot
         static bool IsRegistered(long id) => UserList.ContainsKey(id) && UserList[id].ident > 2;
 
         /// <summary>
+        /// Checks if user is already registered
+        /// </summary>
+        /// <param name="id">Telegram user ID</param>
+        /// <returns></returns>
+        static bool IsRegisteredVK(long id) => UserListVK.ContainsKey(id) && UserListVK[id].ident > 2;
+
+        /// <summary>
         /// Checks if entered course and group exist
         /// </summary>
         /// <param name="s">C.G</param>
         /// <returns></returns>
-        static bool IsCourseGroup(long id, string s)
+        static bool IsCourseGroup(User user, string s)
         {
 			var lst = s.Split('.');
 			if (lst.Length != 2 || lst[0] == String.Empty || lst[1] == String.Empty)
 			{
-				logger.Info($"ID: {id}, IsCourseGroup(\"{s}\") - Ошибка ввода!");
+				logger.Info($"ID: {user.id}, IsCourseGroup(\"{s}\") - Ошибка ввода!");
 				return false;
 			}
 			var (course, group) = (-1, -1);
@@ -275,13 +560,13 @@ namespace ScheduleBot
 			bool IsGroup = int.TryParse(lst[1], out group);
 			if (!IsCourse || !IsGroup)
 			{
-				logger.Info($"ID: {id}, IsCourseGroup(\"{s}\") - Ошибка парсинга!");
+				logger.Info($"ID: {user.id}, IsCourseGroup(\"{s}\") - Ошибка парсинга!");
 				return false;
 			}
 			try
 			{
 				int groupid = 0;
-                switch (UserList[id].Info)
+                switch (user.Info)
                 {
                     case User.UserInfo.bachelor:
                         groupid = GradeList.Find(y => y.degree == "bachelor" && y.num == course).Groups.Find(y => y.num == group).id;
@@ -293,12 +578,12 @@ namespace ScheduleBot
                         groupid = GradeList.Find(y => y.degree == "master" && y.num == course).Groups.Find(y => y.num == group).id;
                         break;
                 }
-                UserList[id].groupid = groupid;
+                user.groupid = groupid;
                 return true;
             }
             catch (NullReferenceException e)
             {
-                logger.Info(e, $"ID: {id}, IsCourseGroup(\"{s}\") - Исключение!");
+                logger.Info(e, $"ID: {user.id}, IsCourseGroup(\"{s}\") - Исключение!");
                 return false;
             }
         }
@@ -317,7 +602,160 @@ namespace ScheduleBot
                     lst.Add(x.Value);
             return lst.ToArray();
         }
+        /// <summary>
+        /// Registration of new user in bot's DB
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        static string Registration(VkNet.Model.Message msg)
+        {
+            //TODO: Replace switch by msg to switch by user.ident
+            string Answer = "Введены неверные данные, повторите попытку.";
 
+            msg.Text = msg.Text.ToLower();
+
+            switch (msg.Text)
+            {
+                case "/start":
+                    if (UserListVK[msg.PeerId.Value].ident == 0)
+                    {
+                        UserListVK[msg.PeerId.Value].id = msg.PeerId.Value;      //Запись айди
+
+                        logger.Info($"ID: {msg.PeerId.Value.ToString()}, регистрация: иницирована.");
+
+                        Answer = "Вы бакалавр, магистр, аспирант или преподаватель?";
+                        UserListVK[msg.PeerId.Value].ident++;
+                    }
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
+                case "аспирант":
+                    if (UserListVK[msg.PeerId.Value].ident == 1)
+                    {
+                        UserListVK[msg.PeerId.Value].Info = User.UserInfo.graduate; //Запись данных
+                        Answer = "Напиши номер курса и группы через точку. (x.x)";
+
+                        logger.Info($"ID: {msg.PeerId.Value.ToString()}, регистрация: записан тип пользователя - {UserListVK[msg.PeerId.Value].Info.ToString()}.");
+
+                        UserListVK[msg.PeerId.Value].ident++;
+                    }
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
+                case "бакалавр":
+                    if (UserListVK[msg.PeerId.Value].ident == 1)
+                    {
+                        UserListVK[msg.PeerId.Value].Info = User.UserInfo.bachelor;  //Запись данных
+                        Answer = "Напиши номер курса и группы через точку. (x.x)";
+
+                        logger.Info($"ID: {msg.PeerId.Value.ToString()}, регистрация: записан тип пользователя - {UserListVK[msg.PeerId.Value].Info.ToString()}.");
+
+                        UserListVK[msg.PeerId.Value].ident++;
+                    }
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
+                case "магистр":
+                    if (UserListVK[msg.PeerId.Value].ident == 1)
+                    {
+
+                        UserListVK[msg.PeerId.Value].Info = User.UserInfo.master;  //Запись данных
+                        Answer = "Напиши номер курса и группы через точку. (x.x)";
+
+                        logger.Info($"ID: {msg.PeerId.Value.ToString()}, регистрация: записан тип пользователя - {UserListVK[msg.PeerId.Value].Info.ToString()}.");
+
+                        UserListVK[msg.PeerId.Value].ident++;
+                    }
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
+                case "преподаватель":
+                    if (UserListVK[msg.PeerId.Value].ident == 1)
+                    {
+                        UserListVK[msg.PeerId.Value].Info = User.UserInfo.teacher;  //Запись данных
+                        Answer = "Введите вашу фамилию.";
+
+                        logger.Info($"ID: {msg.PeerId.Value.ToString()}, регистрация: записан тип пользователя - {UserListVK[msg.PeerId.Value].Info.ToString()}.");
+
+                        UserListVK[msg.PeerId.Value].ident++;
+                    }
+                    else
+                        Answer = "Введены неверные данные, повторите попытку.";
+                    break;
+                case "/forget":
+                case "забудь меня":
+                    UserListVK[msg.PeerId.Value].ident = 0;
+                    Answer = "Я вас забыл! Для повторной регистрации пиши /start";
+                    break;
+                default:
+                    if (UserListVK[msg.PeerId.Value].ident == 2 && UserListVK[msg.PeerId.Value].Info == User.UserInfo.teacher)
+                    {
+                        if (!NameMatchesVK.ContainsKey(msg.PeerId.Value))
+                        {
+                            var lst = ReturnTeachersId(msg.Text);
+                            if (lst.Length == 1)
+                            {
+                                UserListVK[msg.PeerId.Value].teacherId = lst[0].id;
+                                logger.Info($"ID: {msg.PeerId.Value.ToString()}, регистрация: завершена - {UserListVK[msg.PeerId.Value].Info.ToString()} (teacherID {UserListVK[msg.PeerId.Value].teacherId}).");
+                                Answer = "Вы получили доступ к функционалу.\n" + _help;
+                                UserListVK[msg.PeerId.Value].ident++;
+
+                                Json_Data.WriteData();
+                            }
+                            else if (lst.Length > 1)
+                            {
+                                NameMatchesVK.Add(msg.PeerId.Value, lst);
+                                var s = $"Найдено несколько совпадений:\n";
+                                for (var i = 0; i < lst.Length; i++)
+                                    s = s + $"{i + 1}) {lst[i].name}\n";
+                                s = s + "Ввведите номер вашего ФИО.";
+                                Answer = s;
+                            }
+                            else
+                                Answer = "Ошибка, преподаватель не найден! Попробуйте ещё раз.";
+                        }
+                        else
+                        {
+                            if (int.TryParse(msg.Text, out int n) && n - 1 < NameMatchesVK[msg.PeerId.Value].Length && n - 1 >= 0)
+                            {
+                                UserListVK[msg.PeerId.Value].teacherId = NameMatchesVK[msg.PeerId.Value][n - 1].id;
+                                logger.Info($"ID: {msg.PeerId.Value.ToString()}, регистрация: завершена - {UserListVK[msg.PeerId.Value].Info.ToString()} (teacherID {UserListVK[msg.PeerId.Value].teacherId}).");
+                                Answer = "Вы получили доступ к функционалу.\n" + _help;
+                                UserListVK[msg.PeerId.Value].ident++;
+                                NameMatchesVK.Remove(msg.PeerId.Value);
+
+                                Json_Data.WriteData();
+                            }
+                            else
+                            {
+                                Answer = "Ошибка, введён некорректный номер.";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (UserListVK[msg.PeerId.Value].ident == 2 && IsCourseGroup(UserListVK[msg.PeerId.Value], msg.Text))               //проверка введённого номера курса\группы
+                        {
+                            UserListVK[msg.PeerId.Value].ident++;
+                            Answer = "Вы получили доступ к функционалу.\n" + _help;
+                            Json_Data.WriteData();
+
+                            logger.Info($"ID: {msg.PeerId.Value.ToString()}, регистрация: завершена - {UserListVK[msg.PeerId.Value].Info.ToString()} (groupID {UserListVK[msg.PeerId.Value].groupid}).");
+                        }
+                        else
+                        {
+                            if (UserListVK[msg.PeerId.Value].ident == 0)
+                                Answer = "Для начала работы с ботом пиши /start";
+                            else
+                                Answer = "Введены неверные данные, повторите попытку.";
+                        }
+                    }
+                    break;
+
+            }
+
+            return Answer;
+        }
 
         /// <summary>
         /// Registration of new user in bot's DB
@@ -451,7 +889,7 @@ namespace ScheduleBot
                     }
                     else
                     {
-                        if (UserList[msg.Chat.Id].ident == 2 && IsCourseGroup(msg.Chat.Id, msg.Text))               //проверка введённого номера курса\группы
+                        if (UserList[msg.Chat.Id].ident == 2 && IsCourseGroup(UserList[msg.Chat.Id], msg.Text))               //проверка введённого номера курса\группы
                         {
                             UserList[msg.Chat.Id].ident++;
                             Answer = "Вы получили доступ к функционалу.\n" + _help;

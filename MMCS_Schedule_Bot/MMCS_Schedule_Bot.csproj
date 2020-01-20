@@ -13,6 +13,7 @@
     <PackageReference Include="Quartz" Version="3.0.7" />
     <PackageReference Include="NLog" Version="4.6.2" />
     <PackageReference Include="NLog.Config" Version="4.6.2" />
+    <PackageReference Include="VkBotFramework" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="NLog.config">
