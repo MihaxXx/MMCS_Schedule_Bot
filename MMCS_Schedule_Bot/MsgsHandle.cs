@@ -251,7 +251,7 @@ namespace ScheduleBot
             }
             catch (Exception ex) when (ex is System.Net.Http.HttpRequestException && ex.Message.Contains("429"))
             {
-                logger.Warn(ex, $"Сетевая ошибка при ответе в чат id: {msg.ChatId}");
+                logger.Warn(ex, $"Сетевая ошибка при ответе в чат id: {msg.PeerId.Value}");
             }
         }
         static async void BotOnMessageReceived(object sender, MessageEventArgs MessageEventArgs)
