@@ -330,3 +330,4 @@ ASALocalRun/
 .mfractor/
 MMCS_Schedule_Bot/Dockerfile
 MMCS_Schedule_Bot/Json_Data
+MMCS_Schedule_Bot/.DS_Store
