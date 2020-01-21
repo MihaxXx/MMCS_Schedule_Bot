@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization; 
 
 namespace API
@@ -59,7 +60,10 @@ namespace API
 
         [DataMember] 
         // Аббревиатура предмета
-        public string subjectabbr { get; set; } 
+        public string subjectabbr { get; set; }
+
+        // Короткое название предмета
+        public string SubjNameShort() => subjectname.Length > 8 && subjectabbr != string.Empty ? subjectabbr : subjectname;
 
         [DataMember]
         // Идентификатор преподавателя
@@ -67,7 +71,13 @@ namespace API
 
         [DataMember]
         // ФИО преподавателя
-        public string teachername { get; set; } 
+        public string teachername { get; set; }
+
+        // Фамилия преподователя
+        public string TeacherLastname()
+        {
+            return teachername.Count(ch => ch == ' ') == 2 ? teachername.Substring(0, teachername.IndexOf(' ')) : teachername;
+        }
 
         [DataMember]
         // Ученая степень преподавателя

@@ -17,6 +17,7 @@ namespace ScheduleBot
         static IEnumerable<Elective> electives;
         static string electivesStr;
 
+
         static async void BotOnMessageReceived(object sender, MessageReceivedEventArgs eventArgs)
         {
             var msg = eventArgs.Message;
@@ -111,7 +112,7 @@ namespace ScheduleBot
                             if (UserListVK[msg.PeerId.Value].Info != User.UserInfo.teacher)
                                 Answer = LessonToStrVK(StudentMethods.GetCurrentLesson(UserListVK[msg.PeerId.Value].groupid), true);
                             else
-                                Answer = LessonTechToStr(TeacherMethods.GetCurrentLesson(UserListVK[msg.PeerId.Value].teacherId), true);
+                                Answer = LessonTechToStrVK(TeacherMethods.GetCurrentLesson(UserListVK[msg.PeerId.Value].teacherId), true);
                             break;
                         case "/findteacher":
                         case "найти преподавателя":
@@ -123,21 +124,21 @@ namespace ScheduleBot
                             if (UserListVK[msg.PeerId.Value].Info != User.UserInfo.teacher)
                                 Answer = WeekSchToStrVK(StudentMethods.GetWeekSchedule(UserListVK[msg.PeerId.Value].groupid));
                             else
-                                Answer = WeekSchTechToStr(TeacherMethods.GetWeekSchedule(UserListVK[msg.PeerId.Value].teacherId));
+                                Answer = WeekSchTechToStrVK(TeacherMethods.GetWeekSchedule(UserListVK[msg.PeerId.Value].teacherId));
                             break;
                         case "/today":
                         case "расписание на сегодня":
                             if (UserListVK[msg.PeerId.Value].Info != User.UserInfo.teacher)
                                 Answer = DaySchToStrVK(StudentMethods.GetTodaySchedule(UserListVK[msg.PeerId.Value].groupid));
                             else
-                                Answer = DaySchTechToStr(TeacherMethods.GetTodaySchedule(UserListVK[msg.PeerId.Value].teacherId));
+                                Answer = DaySchTechToStrVK(TeacherMethods.GetTodaySchedule(UserListVK[msg.PeerId.Value].teacherId));
                             break;
                         case "/tomorrow":
                         case "расписание на завтра":
                             if (UserListVK[msg.PeerId.Value].Info != User.UserInfo.teacher)
                                 Answer = DaySchToStrVK(StudentMethods.GetTomorrowSchedule(UserListVK[msg.PeerId.Value].groupid));
                             else
-                                Answer = DaySchTechToStr(TeacherMethods.GetTomorrowSchedule(UserListVK[msg.PeerId.Value].teacherId));
+                                Answer = DaySchTechToStrVK(TeacherMethods.GetTomorrowSchedule(UserListVK[msg.PeerId.Value].teacherId));
                             break;
                         case "/knowme":
                         case "знаешь меня?":
@@ -947,7 +948,7 @@ namespace ScheduleBot
 
 
         /// <summary>
-        /// Convert a tuple representing Lesson at time-slot and it's descr. to string to string
+        /// Convert a tuple representing Lesson at time-slot and it's descr. to string to string, short version w/o Markdown
         /// </summary>
         /// <param name="LC"></param>
         /// <returns></returns>
@@ -961,17 +962,16 @@ namespace ScheduleBot
                 //res = LC.Item1.timeslot + "\n";
                 if (LC.Item2.Count > 1)
                 {
-                    //TODO: Use subjname if subjabbr is empty
                     if (LC.Item2.TrueForAll(c => c.subjectid == LC.Item2[0].subjectid))
                         if (LC.Item2.TrueForAll(c => c.teacherid == LC.Item2[0].teacherid))
-                            res += " — " + LC.Item2[0].subjectabbr + ", " + LC.Item2[0].teachername.Substring(0, LC.Item2[0].teachername.IndexOf(' ')) + ", а." + String.Join("; ", LC.Item2.Select(c => c.roomname));
+                            res += " — " + LC.Item2[0].SubjNameShort() + ", " + LC.Item2[0].TeacherLastname() + ", а." + String.Join("; ", LC.Item2.Select(c => c.roomname));
                         else
-                            res += " — " + LC.Item2[0].subjectabbr + ",\n" + String.Join("\n", LC.Item2.Select(c => "__" + c.teachername.Substring(0, c.teachername.IndexOf(' ')) + ", а." + c.roomname));
+                            res += " — " + LC.Item2[0].SubjNameShort() + ",\n" + String.Join("\n", LC.Item2.Select(c => "__" + c.TeacherLastname() + ", а." + c.roomname));
                     else
-                        res += "\n" + String.Join('\n', LC.Item2.Select(c => $"__{c.subjectabbr}, \n    преп. {c.teachername.Substring(0, c.teachername.IndexOf(' '))}, а.{c.roomname}"));
+                        res += "\n" + String.Join('\n', LC.Item2.Select(c => $"__{c.SubjNameShort()}, \n    преп. {c.TeacherLastname()}, а.{c.roomname}"));
                 }
                 else
-                    res += " — " + String.Join('\n', LC.Item2.Select(c => $"{c.subjectabbr}, {(c.teachername.Count(ch => ch == ' ') == 2 ? c.teachername.Substring(0, c.teachername.IndexOf(' ')) : c.teachername)}, а.{c.roomname}"));
+                    res += " — " + String.Join('\n', LC.Item2.Select(c => $"{c.SubjNameShort()}, {c.TeacherLastname()}, а.{c.roomname}"));
             }
             else
                 res = "Нет информации о парах для вашей группы.";
@@ -1011,7 +1011,7 @@ namespace ScheduleBot
         }
 
         /// <summary>
-        /// Convert a list of tuples representing day schedule to string
+        /// Convert a list of tuples representing day schedule to string, short version w/o Markdown
         /// </summary>
         /// <param name="ds">Day schedule</param>
         /// <returns></returns>
@@ -1047,7 +1047,7 @@ namespace ScheduleBot
         }
 
         /// <summary>
-        /// Convert a list of tuples representing week schedule to string
+        /// Convert a list of tuples representing week schedule to string, short version w/o Markdown
         /// </summary>
         /// <param name="ws">Week schedule</param>
         /// <returns></returns>
@@ -1101,6 +1101,30 @@ namespace ScheduleBot
         }
 
         /// <summary>
+        ///  Convert a tuple representing Lesson at time-slot and it's descr. to string, short version w/o Markdown
+        /// </summary>
+        /// <param name="LCG"></param>
+        /// <returns></returns>
+        public static string LessonTechToStrVK((Lesson, List<Curriculum>, List<TechGroup>) LCG, bool showDoW = false)
+        {
+            string res = string.Empty;
+
+            if (LCG.Item3.Count > 0)
+            {
+                var ts = TimeOfLesson.Parse(LCG.Item1.timeslot);
+                res = (showDoW ? (DayOfW)ts.day + " " : "") +
+                    $"{ts.starth}:{ts.startm.ToString("D2")}–{ts.finishh}:{ts.finishm.ToString("D2")}"
+                    + (ts.week != -1 ? (ts.week == 0 ? " в.н." : " н.н.") : "") + " — ";
+                res += string.Join('\n', LCG.Item2.Select(c => c.subjectabbr + ", а." + c.roomname)) + ", " +
+                        StuDegreeShort(LCG.Item3.First().degree) + " " +
+                        string.Join(", ", LCG.Item3.Select(g => g.gradenum + "." + g.groupnum));
+            }
+            else
+                res = "Нет информации о парах для вас.";
+            return res;
+        }
+
+        /// <summary>
         ///  Convert a tuple representing Lesson at time-slot and it's descr. to string
         /// </summary>
         /// <param name="LCG"></param>
@@ -1125,6 +1149,24 @@ namespace ScheduleBot
         }
 
         /// <summary>
+        /// Convert a list of tuples representing day schedule for teacher to string, short version w/o Markdown
+        /// </summary>
+        /// <param name="ds">Day schedule</param>
+        /// <returns></returns>
+        static string DaySchTechToStrVK(List<(Lesson, List<Curriculum>, List<TechGroup>)> ds)
+        {
+            string res = String.Empty;
+            if (ds.Count > 0)
+            {
+                foreach (var l in ds)
+                    res += LessonTechToStrVK(l) + "\n";
+            }
+            else
+                res = "В этот день нет пар.";
+            return res;
+        }
+
+        /// <summary>
         /// Convert a list of tuples representing day schedule for teacher to string
         /// </summary>
         /// <param name="ds">Day schedule</param>
@@ -1139,6 +1181,34 @@ namespace ScheduleBot
             }
             else
                 res = "В этот день нет пар.";
+            return res;
+        }
+
+
+        /// <summary>
+        /// Convert a list of tuples representing week schedule for teacher to string, short version w/o Markdown
+        /// </summary>
+        /// <param name="ws">Week schedule</param>
+        /// <returns></returns>
+        static string WeekSchTechToStrVK(List<(Lesson, List<Curriculum>, List<TechGroup>)> ws)
+        {
+            string res = String.Empty;
+            if (ws.Count > 0)
+            {
+                for (var i = 0; i < 7; i++)
+                {
+                    var daysch = ws.FindAll(LLC => TimeOfLesson.Parse(LLC.Item1.timeslot).day == i);
+                    if (daysch.Count > 0)
+                    {
+                        res += ((DayOfWeek)i).ToString() + ":\n";
+                        foreach (var l in daysch)
+                            res += LessonTechToStr(l) + "\n";
+                    }
+                    res += "\n";
+                }
+            }
+            else
+                res = "Расписание недоступно.";
             return res;
         }
 
