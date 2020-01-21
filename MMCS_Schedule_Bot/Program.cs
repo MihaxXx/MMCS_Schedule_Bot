@@ -24,6 +24,8 @@ namespace ScheduleBot
         static void Main(string[] args)
         {
             Json_Data.ReadData();
+
+
             KeyboardInit();
             WeekInitPlanned();
             TeachersInit();
@@ -36,12 +38,13 @@ namespace ScheduleBot
             GetElectives();
 
 
+            Scheduler.RunNotifier().GetAwaiter().GetResult();
+
+
             BOT = new Telegram.Bot.TelegramBotClient(ReadToken());
             logger.Info("Подключен бот Telegram.");
             BOT.OnMessage += BotOnMessageReceived;
-
             BOT.StartReceiving(new UpdateType[] { UpdateType.Message });
-            Scheduler.RunNotifier().GetAwaiter().GetResult();
             logger.Info("Ожидает сообщений...");
             
 
