@@ -30,7 +30,7 @@ namespace ScheduleBot
             {
                 vkBot.Api.Messages.Send(new MessagesSendParams()
                 {
-                    RandomId = Environment.TickCount,
+                    RandomId = DateTime.Now.Ticks,
                     PeerId = msg.PeerId,
                     Message = Answer
                 });
@@ -153,7 +153,7 @@ namespace ScheduleBot
                             UserListVK[msg.PeerId.Value].ident = 5;
                             vkBot.Api.Messages.Send(new MessagesSendParams()
                             {
-                                RandomId = Environment.TickCount,
+                                RandomId = DateTime.Now.Ticks,
                                 PeerId = msg.PeerId,
                                 Message = Answer,
                                 Keyboard = notifierKeyboardVk
@@ -165,7 +165,7 @@ namespace ScheduleBot
                             UserListVK[msg.PeerId.Value].ident = 6;
                             vkBot.Api.Messages.Send(new MessagesSendParams()
                             {
-                                RandomId = Environment.TickCount,
+                                RandomId = DateTime.Now.Ticks,
                                 PeerId = msg.PeerId,
                                 Message = Answer,
                                 Keyboard = notifierKeyboardVk
@@ -179,7 +179,7 @@ namespace ScheduleBot
                             Answer = "Я вас забыл! Для повторной регистрации пиши /start";
                             vkBot.Api.Messages.Send(new MessagesSendParams()
                             {
-                                RandomId = Environment.TickCount,
+                                RandomId = DateTime.Now.Ticks,
                                 PeerId = msg.PeerId,
                                 Message = Answer
                             });
@@ -229,7 +229,7 @@ namespace ScheduleBot
                 if (IsRegisteredVK(msg.PeerId.Value))
                     vkBot.Api.Messages.Send(new MessagesSendParams()
                     {
-                        RandomId = Environment.TickCount,
+                        RandomId = DateTime.Now.Ticks,
                         PeerId = msg.PeerId,
                         Message = Answer,
                         Keyboard = UserListVK[msg.PeerId.Value].Info == User.UserInfo.teacher ? teacherKeyboardVk : studentKeyboardVk
@@ -237,7 +237,7 @@ namespace ScheduleBot
                 else if (UserListVK[msg.PeerId.Value].ident == 1)
                     vkBot.Api.Messages.Send(new MessagesSendParams()
                     {
-                        RandomId = Environment.TickCount,
+                        RandomId = DateTime.Now.Ticks,
                         PeerId = msg.PeerId,
                         Message = Answer,
                         Keyboard = registrationKeyboardVk
@@ -245,7 +245,7 @@ namespace ScheduleBot
                 else
                     vkBot.Api.Messages.Send(new MessagesSendParams()
                     {
-                        RandomId = Environment.TickCount,
+                        RandomId = DateTime.Now.Ticks,
                         PeerId = msg.PeerId,
                         Message = Answer
                     });
