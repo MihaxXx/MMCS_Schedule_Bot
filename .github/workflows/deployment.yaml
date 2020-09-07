@@ -8,28 +8,11 @@ on:
       - "release-*"
 
 jobs:
-  prepare_version:
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Prepare image name
-        run: echo "docker.pkg.github.com/MihaxXx/MMCS_Schedule_Bot:1.0.$GITHUB_RUN_NUMBER" > image.txt
-      - name: Upload version
-        uses: actions/upload-artifact@v2
-        with:
-          name: image
-          path: image.txt
-
   build_and_publish_image:
     runs-on: ubuntu-18.04
+    env:
+      IMAGE_NAME: docker.pkg.github.com/MihaxXx/MMCS_Schedule_Bot:1.0.$GITHUB_RUN_NUMBER
     steps:
-      - name: Acquire image name
-        uses: actions/download-artifact@v2
-        with:
-          name: image
-      - name: Set image name
-        uses: allenevans/set-env@v1.0.0
-        with:
-          IMAGE_NAME: $(cat image.txt)
       - uses: actions/checkout@v2
       - name: Docker build
         run: docker build --target deploy -t $IMAGE_NAME .
@@ -44,15 +27,8 @@ jobs:
       TG_TOKEN: ${{ secrets.TG_TOKEN }}
       VK_TOKEN: ${{ secrets.VK_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      IMAGE_NAME: docker.pkg.github.com/MihaxXx/MMCS_Schedule_Bot:1.0.$GITHUB_RUN_NUMBER
     steps:
-      - name: Acquire image name
-        uses: actions/download-artifact@v2
-        with:
-          name: image
-      - name: Set image name
-        uses: allenevans/set-env@v1.0.0
-        with:
-          IMAGE_NAME: $(cat image.txt)
       - name: Deploy image
         uses: appleboy/ssh-action@master
         with:
