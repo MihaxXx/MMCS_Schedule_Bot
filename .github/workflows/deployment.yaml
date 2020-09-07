@@ -27,7 +27,9 @@ jobs:
         with:
           name: image
       - name: Set image name
-        run: export IMAGE_NAME=$(cat image.txt)
+        uses: allenevans/set-env@v1.0.0
+        with:
+          IMAGE_NAME: $(cat image.txt)
       - uses: actions/checkout@v2
       - name: Docker build
         run: docker build --target deploy -t $IMAGE_NAME .
@@ -41,20 +43,24 @@ jobs:
     env:
       TG_TOKEN: ${{ secrets.TG_TOKEN }}
       VK_TOKEN: ${{ secrets.VK_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Acquire image name
         uses: actions/download-artifact@v2
         with:
           name: image
       - name: Set image name
-        run: export IMAGE_NAME=$(cat image.txt)
+        uses: allenevans/set-env@v1.0.0
+        with:
+          IMAGE_NAME: $(cat image.txt)
       - name: Deploy image
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           key: ${{ secrets.PRIVATE_KEY }}
-          envs: IMAGE_NAME, TG_TOKEN, VK_TOKEN
+          envs: IMAGE_NAME, TG_TOKEN, VK_TOKEN, GITHUB_TOKEN
           script: |
+            echo $GITHUB_TOKEN | docker login docker.pkg.github.com -u MihaxXx --password-stdin
             docker stop mmcs_bot
             docker run --rm -d --name mmcs_bot --restart unless-stopped -v /workload/mmcs_bot:/data --env \
               MMCS_BOT_PATH_TO_DB=/data \
