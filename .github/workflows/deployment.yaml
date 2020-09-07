@@ -41,6 +41,7 @@ jobs:
     env:
       TG_TOKEN: ${{ secrets.TG_TOKEN }}
       VK_TOKEN: ${{ secrets.VK_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Acquire image name
         uses: actions/download-artifact@v2
@@ -53,8 +54,9 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           key: ${{ secrets.PRIVATE_KEY }}
-          envs: IMAGE_NAME, TG_TOKEN, VK_TOKEN
+          envs: IMAGE_NAME, TG_TOKEN, VK_TOKEN, GITHUB_TOKEN
           script: |
+            echo $GITHUB_TOKEN | docker login docker.pkg.github.com -u MihaxXx --password-stdin
             docker stop mmcs_bot
             docker run --rm -d --name mmcs_bot --restart unless-stopped -v /workload/mmcs_bot:/data --env \
               MMCS_BOT_PATH_TO_DB=/data \
