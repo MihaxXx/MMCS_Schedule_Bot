@@ -5,7 +5,6 @@ using System.Text;
 using System.IO;
 using System.Threading;
 using NLog;
-using Telegram;
 using Telegram.Bot.Types.Enums;
 using VkBotFramework;
 
@@ -23,7 +22,7 @@ namespace ScheduleBot
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            Json_Data.ReadData();
+            JsonData.ReadData();
 
 
             KeyboardInit();
@@ -48,7 +47,7 @@ namespace ScheduleBot
             logger.Info("Ожидает сообщений...");
             
 
-            vkBot = new VkBot(ReadTokenVK().Item1, ReadTokenVK().Item2);
+            vkBot = new VkBot(ReadTokenVK(), GetGroupUrl());
             vkBot.OnMessageReceived += BotOnMessageReceived;
             logger.Info("Подключен бот VK.");
             vkBot.StartAsync();
@@ -107,7 +106,7 @@ namespace ScheduleBot
         protected static void OnExit(object sender, ConsoleCancelEventArgs args)
         {
             BOT.StopReceiving();
-            Json_Data.WriteData();
+            JsonData.WriteData();
             logger.Info("Exit.");
             _closing.Set();
         }
@@ -241,7 +240,8 @@ namespace ScheduleBot
             string token = string.Empty;
             try
             {
-                token = File.ReadAllText("token.key", Encoding.UTF8);
+                token = Environment.GetEnvironmentVariable("MMCS_BOT_TG_TOKEN") ?? 
+                        File.ReadAllText("token.key", Encoding.UTF8);
             }
             catch (FileNotFoundException e)
             {
@@ -250,13 +250,13 @@ namespace ScheduleBot
             }
             return token;
         }
-        public static (string,string) ReadTokenVK()
+        public static string ReadTokenVK()
         {
-            var res = (string.Empty, string.Empty);
+            var res = string.Empty;
             try
             {
-                var content = File.ReadAllLines("tokenVK.key", Encoding.UTF8);
-                res = (content[0], content[1]);
+                res = Environment.GetEnvironmentVariable("MMCS_BOT_VK_TOKEN") ??
+                                    File.ReadAllText("tokenVK.key", Encoding.UTF8);
             }
             catch (FileNotFoundException e)
             {
@@ -264,6 +264,19 @@ namespace ScheduleBot
                 Environment.Exit(1);
             }
             return res;
+        }
+        
+        private static string GetGroupUrl()
+        {
+            var groupUrl = Environment.GetEnvironmentVariable("MMCS_BOT_GROUP_URL");
+
+            if (groupUrl == null)
+            {
+                logger.Error("Variable MMCS_BOT_GROUP_URL not set");
+                Environment.Exit(1);
+            }
+
+            return groupUrl;
         }
     }
 }
