@@ -88,7 +88,7 @@ namespace ScheduleBot
                 bool onOrOff = msg.Text.ToLower() == "включить";
                 UserListVK[msg.PeerId.Value].eveningNotify = onOrOff;
                 UserListVK[msg.PeerId.Value].ident = 3;
-                Json_Data.WriteData();
+                JsonData.WriteData();
                 string onOrOffMsg = onOrOff ? "включено" : "выключено";
                 Answer = $"Вечернее уведомление *{onOrOffMsg}*.";
             }
@@ -97,7 +97,7 @@ namespace ScheduleBot
                 bool onOrOff = msg.Text.ToLower() == "включить";
                 UserListVK[msg.PeerId.Value].preLessonNotify = onOrOff;
                 UserListVK[msg.PeerId.Value].ident = 3;
-                Json_Data.WriteData();
+                JsonData.WriteData();
                 string onOrOffMsg = onOrOff ? "включено" : "выключено";
                 Answer = $"Уведомление за 15 минут до первой пары *{onOrOffMsg}*.";
             }
@@ -175,7 +175,7 @@ namespace ScheduleBot
                         case "/forget":
                         case "забудь меня":
                             UserListVK.Remove(msg.PeerId.Value);
-                            Json_Data.WriteData();
+                            JsonData.WriteData();
                             Answer = "Я вас забыл! Для повторной регистрации пиши /start";
                             vkBot.Api.Messages.Send(new MessagesSendParams()
                             {
@@ -320,7 +320,7 @@ namespace ScheduleBot
                 bool onOrOff = msg.Text.ToLower() == "включить";
                 UserList[msg.Chat.Id].eveningNotify = onOrOff;
                 UserList[msg.Chat.Id].ident = 3;
-                Json_Data.WriteData();
+                JsonData.WriteData();
                 string onOrOffMsg = onOrOff ? "включено" : "выключено";
                 Answer = $"Вечернее уведомление *{onOrOffMsg}*.";
             }
@@ -329,7 +329,7 @@ namespace ScheduleBot
                 bool onOrOff = msg.Text.ToLower() == "включить";
                 UserList[msg.Chat.Id].preLessonNotify = onOrOff;
                 UserList[msg.Chat.Id].ident = 3;
-                Json_Data.WriteData();
+                JsonData.WriteData();
                 string onOrOffMsg = onOrOff ? "включено" : "выключено";
                 Answer = $"Уведомление за 15 минут до первой пары *{onOrOffMsg}*.";
             }
@@ -396,7 +396,7 @@ namespace ScheduleBot
                         case "/forget":
                         case "забудь меня":
                             UserList.Remove(msg.Chat.Id);
-                            Json_Data.WriteData();
+                            JsonData.WriteData();
                             Answer = "Я вас забыл! Для повторной регистрации пиши /start";
                             await BOT.SendTextMessageAsync(msg.Chat.Id, Answer, replyMarkup: new ReplyKeyboardRemove());
                             return;
@@ -701,7 +701,7 @@ namespace ScheduleBot
                                 Answer = "Вы получили доступ к функционалу.\n" + _help;
                                 UserListVK[msg.PeerId.Value].ident++;
 
-                                Json_Data.WriteData();
+                                JsonData.WriteData();
                             }
                             else if (lst.Length > 1)
                             {
@@ -725,7 +725,7 @@ namespace ScheduleBot
                                 UserListVK[msg.PeerId.Value].ident++;
                                 NameMatchesVK.Remove(msg.PeerId.Value);
 
-                                Json_Data.WriteData();
+                                JsonData.WriteData();
                             }
                             else
                             {
@@ -739,7 +739,7 @@ namespace ScheduleBot
                         {
                             UserListVK[msg.PeerId.Value].ident++;
                             Answer = "Вы получили доступ к функционалу.\n" + _help;
-                            Json_Data.WriteData();
+                            JsonData.WriteData();
 
                             logger.Info($"ID: {msg.PeerId.Value.ToString()}, регистрация: завершена - {UserListVK[msg.PeerId.Value].Info.ToString()} (groupID {UserListVK[msg.PeerId.Value].groupid}).");
                         }
@@ -856,7 +856,7 @@ namespace ScheduleBot
                                 Answer = "Вы получили доступ к функционалу.\n" + _help;
                                 UserList[msg.Chat.Id].ident++;
 
-                                Json_Data.WriteData();
+                                JsonData.WriteData();
                             }
                             else if (lst.Length > 1)
                             {
@@ -880,7 +880,7 @@ namespace ScheduleBot
                                 UserList[msg.Chat.Id].ident++;
                                 NameMatches.Remove(msg.Chat.Id);
 
-                                Json_Data.WriteData();
+                                JsonData.WriteData();
                             }
                             else
                             {
@@ -894,7 +894,7 @@ namespace ScheduleBot
                         {
                             UserList[msg.Chat.Id].ident++;
                             Answer = "Вы получили доступ к функционалу.\n" + _help;
-                            Json_Data.WriteData();
+                            JsonData.WriteData();
 
                             logger.Info($"ID: {msg.Chat.Id.ToString()}, регистрация: завершена - {UserList[msg.Chat.Id].Info.ToString()} (groupID {UserList[msg.Chat.Id].groupid}).");
                         }

@@ -23,7 +23,7 @@ namespace ScheduleBot
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            Json_Data.ReadData();
+            JsonData.ReadData();
 
 
             KeyboardInit();
@@ -107,7 +107,7 @@ namespace ScheduleBot
         protected static void OnExit(object sender, ConsoleCancelEventArgs args)
         {
             BOT.StopReceiving();
-            Json_Data.WriteData();
+            JsonData.WriteData();
             logger.Info("Exit.");
             _closing.Set();
         }

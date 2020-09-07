@@ -24,7 +24,7 @@ namespace Notify
         public async static Task RefreshNotifiedToday()
         {
             var today = DateTime.Now;
-            var lastModified = Json_Data.LastModified();
+            var lastModified = JsonData.LastModified();
             var diff = today - lastModified;
             var lastModifiedHour = lastModified.Hour;
             var diffDays = diff.Days;
@@ -274,7 +274,7 @@ public class Notifier
         {
             logger.Info("No target teachers.");
         }
-        Json_Data.WriteData();
+        JsonData.WriteData();
         logger.Info("PreLessonNotifier finished.");
         return tasks;
     }
@@ -293,7 +293,7 @@ public class Notifier
                 user.Value.notifiedToday = false;
             }
             logger.Info("Reset notified finished.");
-            Json_Data.WriteData();
+            JsonData.WriteData();
         });
 
         return task;
