@@ -1,0 +1,64 @@
+name: Deployment Workflow
+
+on:
+  push:
+    branches:
+      - "master"
+    tags:
+      - "release-*"
+
+jobs:
+  prepare_version:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Prepare image name
+        run: echo "docker.pkg.github.com/MihaxXx/MMCS_Schedule_Bot:1.0.$GITHUB_RUN_NUMBER" > image.txt
+      - name: Upload version
+        uses: actions/upload-artifact@v2
+        with:
+          name: image
+          path: image.txt
+
+  build_and_publish_image:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Acquire image name
+        uses: actions/download-artifact@v2
+        with:
+          name: image
+      - name: Set image name
+        run: export IMAGE_NAME=$(cat image.txt)
+      - uses: actions/checkout@v2
+      - name: Docker build
+        run: docker build --target deploy -t $IMAGE_NAME .
+      - name: Docker Login
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u MihaxXx --password-stdin
+      - name: Docker publish
+        run: docker push $IMAGE_NAME
+
+  deploy_image:
+    runs-on: ubuntu-18.04
+    env:
+      TG_TOKEN: ${{ secrets.TG_TOKEN }}
+      VK_TOKEN: ${{ secrets.VK_TOKEN }}
+    steps:
+      - name: Acquire image name
+        uses: actions/download-artifact@v2
+        with:
+          name: image
+      - name: Set image name
+        run: export IMAGE_NAME=$(cat image.txt)
+      - name: Deploy image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          envs: IMAGE_NAME, TG_TOKEN, VK_TOKEN
+          script: |
+            docker stop mmcs_bot
+            docker run --rm -d --name mmcs_bot --restart unless-stopped -v /workload/mmcs_bot:/data --env \
+              MMCS_BOT_PATH_TO_DB=/data \
+              MMCS_BOT_TG_TOKEN=$TG_TOKEN \
+              MMCS_BOT_VK_TOKEN=$VK_TOKEN \
+              MMCS_BOT_GROUP_URL=mmcsschedulebot \
+              $IMAGE_NAME
