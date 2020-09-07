@@ -30,7 +30,6 @@ jobs:
       VK_TOKEN: ${{ secrets.VK_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      -
       - name: Deploy image
         uses: appleboy/ssh-action@master
         with:
