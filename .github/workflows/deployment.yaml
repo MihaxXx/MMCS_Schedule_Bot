@@ -35,6 +35,7 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           key: ${{ secrets.PRIVATE_KEY }}
+          username: root
           envs: TG_TOKEN, VK_TOKEN, GITHUB_TOKEN, GITHUB_RUN_NUMBER
           script: |
             echo $GITHUB_TOKEN | docker login docker.pkg.github.com -u MihaxXx --password-stdin
