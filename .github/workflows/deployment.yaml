@@ -13,9 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Docker build
-        run: docker build --target deploy -t docker.pkg.github.com/MihaxXx/MMCS_Schedule_Bot:1.0.$GITHUB_RUN_NUMBER .
+        run: docker build --target deploy -t docker.pkg.github.com/mihaxxx/mmcs_schedule_bot:1.0.$GITHUB_RUN_NUMBER .
       - name: Docker build latest
-        run: docker build --target deploy -t docker.pkg.github.com/MihaxXx/MMCS_Schedule_Bot:latest .
+        run: docker build --target deploy -t docker.pkg.github.com/mihaxxx/mmcs_schedule_bot:latest .
       - name: Docker Login
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u MihaxXx --password-stdin
       - name: Docker publish
