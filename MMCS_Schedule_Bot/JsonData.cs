@@ -50,12 +50,12 @@ namespace ScheduleBot
         {
             if (File.Exists(TgDataFilename))
             {
-                Program.UserList = JsonConvert.DeserializeObject<Dictionary<long, User>>(File.ReadAllText("UserDB.json", Encoding.UTF8));
+                Program.UserList = JsonConvert.DeserializeObject<Dictionary<long, User>>(File.ReadAllText(TgDataFilename, Encoding.UTF8));
                 Logger.Info($"Прочитаны из файла данные {Program.UserList.Count} пользователей Telegram.");
             }
             if (File.Exists(VkDataFilename))
             {
-                Program.UserListVK = JsonConvert.DeserializeObject<Dictionary<long, User>>(File.ReadAllText("UserVK_DB.json", Encoding.UTF8));
+                Program.UserListVK = JsonConvert.DeserializeObject<Dictionary<long, User>>(File.ReadAllText(VkDataFilename, Encoding.UTF8));
                 Logger.Info($"Прочитаны из файла данные {Program.UserListVK.Count} пользователей VK.");
             }
         }
