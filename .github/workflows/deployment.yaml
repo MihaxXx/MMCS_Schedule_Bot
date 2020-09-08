@@ -41,9 +41,9 @@ jobs:
           script: |
             echo $GITHUB_TOKEN | docker login docker.pkg.github.com -u MihaxXx --password-stdin
             docker stop mmcs_bot
-            docker run -d --name mmcs_bot --restart unless-stopped -v /workload/mmcs_bot:/data --env \
-              MMCS_BOT_PATH_TO_DB=/data \
-              MMCS_BOT_TG_TOKEN=$TG_TOKEN \
-              MMCS_BOT_VK_TOKEN=$VK_TOKEN \
-              MMCS_BOT_GROUP_URL=mmcsschedulebot \
-              docker.pkg.github.com/mihaxxx/mmcs_schedule_bot/bot:1.0.$GITHUB_RUN_NUMBER
+            docker run -d --name mmcs_bot --restart unless-stopped -v "/workload/mmcs_bot:/data" --env \
+              MMCS_BOT_PATH_TO_DB="/data" \
+              MMCS_BOT_TG_TOKEN="$TG_TOKEN" \
+              MMCS_BOT_VK_TOKEN="$VK_TOKEN" \
+              MMCS_BOT_GROUP_URL="mmcsschedulebot" \
+              "docker.pkg.github.com/mihaxxx/mmcs_schedule_bot/bot:1.0.$GITHUB_RUN_NUMBER"
