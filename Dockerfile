@@ -14,6 +14,9 @@ RUN dotnet publish -c Release --output "/dist"
 
 FROM mcr.microsoft.com/dotnet/core/runtime:2.1 as deploy
 
+RUN echo "Europe/Moscow" > /etc/timezone
+RUN dpkg-reconfigure -f noninteractive tzdata
+
 COPY --from=build /dist /dist
 WORKDIR /dist
 
