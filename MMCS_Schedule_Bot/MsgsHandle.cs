@@ -953,11 +953,37 @@ namespace ScheduleBot
 
 
         /// <summary>
-        /// Convert a tuple representing Lesson at time-slot and it's descr. to string to string, short version w/o Markdown
+        /// Guesses the type of lesson (lecture or practice)
         /// </summary>
         /// <param name="LC"></param>
         /// <returns></returns>
-        public static string LessonToStrVK((Lesson, List<Curriculum>) LC, bool showDoW = false)
+        public static string LessonTypeVK((Lesson, List<Curriculum>) LC)
+        {
+            if (LC.Item2.Count == 1 && LC.Item2.First().roomname.Contains(',') ||
+                LC.Item2.TrueForAll(c => c.subjectid == LC.Item2[0].subjectid) && !LC.Item2.TrueForAll(c => c.teacherid == LC.Item2[0].teacherid) ||
+                LC.Item2.First().subjectname == "Иностранный язык")
+                return " практ.";
+            var groups = TeacherSchedule[LC.Item2.First().teacherid].Item1.Where(lcc => lcc.Item1.id == LC.Item1.id).First().Item3;
+            if (LC.Item2.Count == 1 && groups.Count > 1)
+                return " лекц.";
+            else
+            {
+                var grade = GradeList.First(gr => gr.degree == groups.First().degree && gr.num == groups.First().gradenum).Groups;
+                var groupName = grade.First(g => g.num == groups.First().groupnum).name;
+                var Potoki = grade.Select(grs => grs.name).Distinct().Where(grName => grade.Select(grs => grs.name).Count(n => n == grName) > 1);
+                if (Potoki.Contains(groupName))
+                    return " практ.";
+            }
+            return "";
+        }
+
+
+            /// <summary>
+            /// Convert a tuple representing Lesson at time-slot and it's descr. to string to string, short version w/o Markdown
+            /// </summary>
+            /// <param name="LC"></param>
+            /// <returns></returns>
+            public static string LessonToStrVK((Lesson, List<Curriculum>) LC, bool showDoW = false)
         {
             string res = string.Empty;
             if (LC.Item2.Count > 0)
@@ -969,18 +995,44 @@ namespace ScheduleBot
                 {
                     if (LC.Item2.TrueForAll(c => c.subjectid == LC.Item2[0].subjectid))
                         if (LC.Item2.TrueForAll(c => c.teacherid == LC.Item2[0].teacherid))
-                            res += " — " + LC.Item2[0].SubjNameShort() + ", " + LC.Item2[0].TeacherLastname() + ", а." + String.Join("; ", LC.Item2.Select(c => c.roomname));
+                            res += " — " + LC.Item2[0].SubjNameShort() + LessonType(LC) + ", " + LC.Item2[0].TeacherLastname() + ", а." + String.Join("; ", LC.Item2.Select(c => c.roomname));
                         else
-                            res += " — " + LC.Item2[0].SubjNameShort() + ",\n" + String.Join("\n", LC.Item2.Select(c => "__" + c.TeacherLastname() + ", а." + c.roomname));
+                            res += " — " + LC.Item2[0].SubjNameShort() + LessonType(LC) + ",\n" + String.Join("\n", LC.Item2.Select(c => "__" + c.TeacherLastname() + ", а." + c.roomname));
                     else
-                        res += "\n" + String.Join('\n', LC.Item2.Select(c => $"__{c.SubjNameShort()}, \n    преп. {c.TeacherLastname()}, а.{c.roomname}"));
+                        res += "\n" + String.Join('\n', LC.Item2.Select(c => $"__{c.SubjNameShort() + LessonType(LC)}, \n    преп. {c.TeacherLastname()}, а.{c.roomname}"));
                 }
                 else
-                    res += " — " + String.Join('\n', LC.Item2.Select(c => $"{c.SubjNameShort()}, {c.TeacherLastname()}, а.{c.roomname}"));
+                    res += " — " + String.Join('\n', LC.Item2.Select(c => $"{c.SubjNameShort() + LessonType(LC)}, {c.TeacherLastname()}, а.{c.roomname}"));
             }
             else
                 res = "Нет информации о парах для вашей группы.";
             return res;
+        }
+
+
+        /// <summary>
+        /// Guesses the type of lesson (lecture or practice)
+        /// </summary>
+        /// <param name="LC"></param>
+        /// <returns></returns>
+        public static string LessonType((Lesson, List<Curriculum>) LC)
+        {
+            if (LC.Item2.Count == 1 && LC.Item2.First().roomname.Contains(',') ||
+                LC.Item2.TrueForAll(c => c.subjectid == LC.Item2[0].subjectid) && !LC.Item2.TrueForAll(c => c.teacherid == LC.Item2[0].teacherid) ||
+                LC.Item2.First().subjectname== "Иностранный язык")
+                return " *(практ.)*";
+            var groups = TeacherSchedule[LC.Item2.First().teacherid].Item1.Where(lcc => lcc.Item1.id == LC.Item1.id).First().Item3;
+            if (LC.Item2.Count == 1 && groups.Count > 1)
+                return " *(лекц.)*";
+            else
+            {
+                var grade = GradeList.First(gr => gr.degree == groups.First().degree && gr.num == groups.First().gradenum).Groups;
+                var groupName = grade.First(g => g.num == groups.First().groupnum).name;
+                var Potoki = grade.Select(grs => grs.name).Distinct().Where(grName => grade.Select(grs => grs.name).Count(n => n == grName) > 1);
+                if (Potoki.Contains(groupName))
+                    return " *(практ.)*";
+            }
+            return "";
         }
 
         /// <summary>
@@ -1001,14 +1053,14 @@ namespace ScheduleBot
                     //TODO: Use subjabbr if length of subjname is too long
                     if (LC.Item2.TrueForAll(c => c.subjectid == LC.Item2[0].subjectid))
                         if (LC.Item2.TrueForAll(c => c.teacherid == LC.Item2[0].teacherid))
-                            res += " — " + LC.Item2[0].subjectname + ",\n    преп. _" + LC.Item2[0].teachername + "_, ауд. " + String.Join("; ", LC.Item2.Select(c => "*" + c.roomname + "*"));
+                            res += " — " + LC.Item2[0].subjectname + LessonType(LC) + ",\n    преп. _" + LC.Item2[0].teachername + "_, ауд. " + String.Join("; ", LC.Item2.Select(c => "*" + c.roomname + "*"));
                         else
-                            res += " — " + LC.Item2[0].subjectname + ",\n" + String.Join("\n", LC.Item2.Select(c => "    преп. _" + c.teachername + "_, ауд. *" + c.roomname + "*"));
+                            res += " — " + LC.Item2[0].subjectname + LessonType(LC) + ",\n" + String.Join("\n", LC.Item2.Select(c => "    преп. _" + c.teachername + "_, ауд. *" + c.roomname + "*"));
                     else
-                        res += "\n" + String.Join('\n', LC.Item2.Select(c => $"    {c.subjectname}, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
+                        res += "\n" + String.Join('\n', LC.Item2.Select(c => $"    {c.subjectname + LessonType(LC)}, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
                 }
                 else
-                    res += " — " + String.Join('\n', LC.Item2.Select(c => $"{c.subjectname}, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
+                    res += " — " + String.Join('\n', LC.Item2.Select(c => $"{c.subjectname + LessonType(LC)}, \n    преп. _{c.teachername}_, ауд. *{c.roomname}*"));
             }
             else
                 res = "Нет информации о парах для вашей группы.";
