@@ -147,31 +147,33 @@ namespace ScheduleBot
                             else
                                 Answer = $"Вы {vkBot.Api.Users.Get(new List<long> {msg.FromId.Value}).First().FirstName.Replace("`", "").Replace("_", "").Replace("*", "")} из группы {StudentMethods.groupIDToCourseGroup(UserListVK[msg.PeerId.Value].groupid)}";
                             break;
-                            /*
-                        case "/eveningnotify":
-                            Answer = $"Сейчас вечернее уведомление о завтрашней первой паре *{(UserListVK[msg.PeerId.Value].eveningNotify ? "включено" : "выключено")}*. \nНастройте его.";
-                            UserListVK[msg.PeerId.Value].ident = 5;
-                            vkBot.Api.Messages.Send(new MessagesSendParams()
-                            {
-                                RandomId = DateTime.Now.Ticks,
-                                PeerId = msg.PeerId,
-                                Message = Answer,
-                                Keyboard = notifierKeyboardVk
-                            });
-                            return;
+                        /*
+                    case "/eveningnotify":
+                        Answer = $"Сейчас вечернее уведомление о завтрашней первой паре *{(UserListVK[msg.PeerId.Value].eveningNotify ? "включено" : "выключено")}*. \nНастройте его.";
+                        UserListVK[msg.PeerId.Value].ident = 5;
+                        vkBot.Api.Messages.Send(new MessagesSendParams()
+                        {
+                            RandomId = DateTime.Now.Ticks,
+                            PeerId = msg.PeerId,
+                            Message = Answer,
+                            Keyboard = notifierKeyboardVk
+                        });
+                        return;
 
-                        case "/prelessonnotify":
-                            Answer = $"Сейчас уведомление за 15 минут до первой пары *{(UserListVK[msg.PeerId.Value].preLessonNotify ? "включено" : "выключено")}*. \nНастройте его.";
-                            UserListVK[msg.PeerId.Value].ident = 6;
-                            vkBot.Api.Messages.Send(new MessagesSendParams()
-                            {
-                                RandomId = DateTime.Now.Ticks,
-                                PeerId = msg.PeerId,
-                                Message = Answer,
-                                Keyboard = notifierKeyboardVk
-                            });
-                            return;
-                            */
+                    case "/prelessonnotify":
+                        Answer = $"Сейчас уведомление за 15 минут до первой пары *{(UserListVK[msg.PeerId.Value].preLessonNotify ? "включено" : "выключено")}*. \nНастройте его.";
+                        UserListVK[msg.PeerId.Value].ident = 6;
+                        vkBot.Api.Messages.Send(new MessagesSendParams()
+                        {
+                            RandomId = DateTime.Now.Ticks,
+                            PeerId = msg.PeerId,
+                            Message = Answer,
+                            Keyboard = notifierKeyboardVk
+                        });
+                        return;
+                        */
+
+                        case "/stop":
                         case "/forget":
                         case "забудь меня":
                             UserListVK.Remove(msg.PeerId.Value);
@@ -393,6 +395,7 @@ namespace ScheduleBot
                             return;
 
 
+                        case "/stop":
                         case "/forget":
                         case "забудь меня":
                             UserList.Remove(msg.Chat.Id);
@@ -683,6 +686,7 @@ namespace ScheduleBot
                     else
                         Answer = "Введены неверные данные, повторите попытку.";
                     break;
+                case "/stop":
                 case "/forget":
                 case "забудь меня":
                     UserListVK[msg.PeerId.Value].ident = 0;
@@ -838,6 +842,7 @@ namespace ScheduleBot
                     else
                         Answer = "Введены неверные данные, повторите попытку.";
                     break;
+                case "/stop":
                 case "/forget":
                 case "забудь меня":
                     UserList[msg.Chat.Id].ident = 0;
