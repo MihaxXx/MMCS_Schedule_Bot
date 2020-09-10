@@ -14,7 +14,7 @@ RUN dotnet publish -c Release --output "/dist"
 
 FROM mcr.microsoft.com/dotnet/core/runtime:2.1 as deploy
 
-RUN sudo timedatectl set-timezone Europe/Moscow
+RUN sudo ln -sf /usr/share/zoneinfo/Europe/Moscow /etc/localtime
 
 COPY --from=build /dist /dist
 WORKDIR /dist
