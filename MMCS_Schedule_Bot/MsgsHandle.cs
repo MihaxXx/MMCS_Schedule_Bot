@@ -995,14 +995,14 @@ namespace ScheduleBot
                 {
                     if (LC.Item2.TrueForAll(c => c.subjectid == LC.Item2[0].subjectid))
                         if (LC.Item2.TrueForAll(c => c.teacherid == LC.Item2[0].teacherid))
-                            res += " — " + LC.Item2[0].SubjNameShort() + LessonType(LC) + ", " + LC.Item2[0].TeacherLastname() + ", а." + String.Join("; ", LC.Item2.Select(c => c.roomname));
+                            res += " — " + LC.Item2[0].SubjNameShort() + LessonTypeVK(LC) + ", " + LC.Item2[0].TeacherLastname() + ", а." + String.Join("; ", LC.Item2.Select(c => c.roomname));
                         else
-                            res += " — " + LC.Item2[0].SubjNameShort() + LessonType(LC) + ",\n" + String.Join("\n", LC.Item2.Select(c => "__" + c.TeacherLastname() + ", а." + c.roomname));
+                            res += " — " + LC.Item2[0].SubjNameShort() + LessonTypeVK(LC) + ",\n" + String.Join("\n", LC.Item2.Select(c => "__" + c.TeacherLastname() + ", а." + c.roomname));
                     else
-                        res += "\n" + String.Join('\n', LC.Item2.Select(c => $"__{c.SubjNameShort() + LessonType(LC)}, \n    преп. {c.TeacherLastname()}, а.{c.roomname}"));
+                        res += "\n" + String.Join('\n', LC.Item2.Select(c => $"__{c.SubjNameShort() + LessonTypeVK(LC)}, \n    преп. {c.TeacherLastname()}, а.{c.roomname}"));
                 }
                 else
-                    res += " — " + String.Join('\n', LC.Item2.Select(c => $"{c.SubjNameShort() + LessonType(LC)}, {c.TeacherLastname()}, а.{c.roomname}"));
+                    res += " — " + String.Join('\n', LC.Item2.Select(c => $"{c.SubjNameShort() + LessonTypeVK(LC)}, {c.TeacherLastname()}, а.{c.roomname}"));
             }
             else
                 res = "Нет информации о парах для вашей группы.";
