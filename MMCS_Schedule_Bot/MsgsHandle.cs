@@ -618,6 +618,7 @@ namespace ScheduleBot
 
             switch (msg.Text)
             {
+		case "Начать":	    
                 case "/start":
                     if (UserListVK[msg.PeerId.Value].ident == 0)
                     {
