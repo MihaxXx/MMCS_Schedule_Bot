@@ -6,6 +6,9 @@ on:
       - "master"
     tags:
       - "release-*"
+  workflow_dispatch:
+    branches:
+      - "master" 
 
 jobs:
   build_and_publish_image:
